@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador CAAES</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 25px;
+      color: #222;
+    }
+
+    .contenedor {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #123b6d;
+    }
+
+    .tarjeta {
+      background: white;
+      padding: 25px;
+      margin-top: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.10);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      background: #123b6d;
+      color: white;
+      border: none;
+      padding: 13px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .universidad {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 15px;
+    }
+
+    .universidad h2 {
+      color: #123b6d;
+      margin-top: 0;
+    }
+
+    .simulador {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .simulador button {
+      margin-top: 10px;
+    }
+
+    .pregunta {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .materia {
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .opcion {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: white;
+      color: #222;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+    }
+
+    .opcion.seleccionada {
+      background: #dbeafe;
+      border-color: #123b6d;
+    }
+
+    .navegacion {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .progreso {
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    .resultado {
+      text-align: center;
+    }
+
+    .correcto {
+      color: green;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #c62828;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h1>🎓 Simulador CAAES</h1>
+
+  <div id="app">
+    Cargando simuladores...
+  </div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+  "https://uetdixjvbxqldanjwbpg.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_UdFDD9V9erD05CAVy3_mFQ_oRVY8_r-";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+let testSeleccionado = null;
+let intentoActual = null;
+let preguntas = [];
+let respuestas = {};
+let preguntaActual = 0;
+let tiempoRestante = 0;
+let temporizador = null;
+
+
+/* =========================================
+   CARGAR CATÁLOGO
+========================================= */
+
+async function cargarCatalogo() {
+
+  const app = document.getElementById("app");
+
+  const { data, error } =
+    await supabaseClient.rpc("get_public_catalog");
+
+  if (error) {
+
+    app.innerHTML = `
+      <div class="tarjeta error">
+        ❌ Error al cargar los simuladores.<br><br>
+        ${error.message}
+      </div>
+    `;
+
+    return;
+  }
+
+  if (!data || data.length === 0) {
+
+    app.innerHTML = `
+      <div class="tarjeta">
+        No hay simuladores disponibles.
+      </div>
+    `;
+
+    return;
+  }
+
+  const universidades = {};
+
+  data.forEach(item => {
+
+    if (!universidades[item.university_id]) {
+
+      universidades[item.university_id] = {
+        nombre: item.university_name,
+        simuladores: []
+      };
+
+    }
+
+    universidades[item.university_id].simuladores.push(item);
+
+  });
+
+
+  let html = `
+    <div class="tarjeta">
+      <h2>Selecciona tu simulador</h2>
+    `;
+
+  Object.values(universidades).forEach(universidad => {
+
+    html += `
+      <div class="universidad">
+        <h2>🏛️ ${universidad.nombre}</h2>
+    `;
+
+    universidad.simuladores.forEach(simulador => {
+
+      html += `
+        <div class="simulador">
+
+          <strong>${simulador.test_name}</strong>
+
+          <p>
+            📝 ${simulador.question_count} preguntas
+            <br>
+            ⏱️ ${simulador.time_minutes} minutos
+          </p>
+
+          <button
+            onclick="seleccionarSimulador('${simulador.test_id}')">
+            Comenzar
+          </button>
+
+        </div>
+      `;
+
+    });
+
+    html += `</div>`;
+
+  });
+
+  html += `</div>`;
+
+  app.innerHTML = html;
+}
+
+
+/* =========================================
+   SELECCIONAR SIMULADOR
+========================================= */
+
+async function seleccionarSimulador(testId) {
+
+  const { data, error } =
+    await supabaseClient.rpc("get_public_catalog");
+
+  if (error) {
+
+    mostrarError(error.message);
+    return;
+
+  }
+
+  testSeleccionado =
+    data.find(item => item.test_id === testId);
+
+  if (!testSeleccionado) {
+
+    mostrarError("No se encontró el simulador.");
+    return;
+
+  }
+
+  mostrarRegistro();
+}
+
+
+/* =========================================
+   REGISTRO DEL ESTUDIANTE
+========================================= */
+
+function mostrarRegistro() {
+
+  const app = document.getElementById("app");
+
+  app.innerHTML = `
+
+    <div class="tarjeta">
+
+      <h2>
+        ${testSeleccionado.university_name}
+      </h2>
+
+      <h3>
+        ${testSeleccionado.test_name}
+      </h3>
+
+      <p>
+        📝 ${testSeleccionado.question_count} preguntas
+        <br>
+        ⏱️ ${testSeleccionado.time_minutes} minutos
+      </p>
+
+      <label>
+        Nombre del estudiante
+      </label>
+
+      <input
+        id="nombreEstudiante"
+        type="text"
+        placeholder="Escribe tu nombre completo">
+
+      <button onclick="iniciarExamen()">
+        🚀 Iniciar examen
+      </button>
+
+      <div id="mensaje"></div>
+
+    </div>
+
+  `;
+}
+
+
+/* =========================================
+   INICIAR EXAMEN
+========================================= */
+
+async function iniciarExamen() {
+
+  const nombre =
+    document.getElementById("nombreEstudiante").value.trim();
+
+  const mensaje =
+    document.getElementById("mensaje");
+
+  if (!nombre) {
+
+    mensaje.innerHTML = `
+      <p class="error">
+        Escribe tu nombre antes de comenzar.
+      </p>
+    `;
+
+    return;
+  }
+
+  mensaje.innerHTML =
+    "<p>Iniciando examen...</p>";
+
+
+  const { data, error } =
+    await supabaseClient.rpc(
+      "start_exam",
+      {
+        p_test_id: testSeleccionado.test_id,
+        p_student_name: nombre
+      }
+    );
+
+
+  if (error) {
+
+    mensaje.innerHTML = `
+      <p class="error">
+        ❌ ${error.message}
+      </p>
+    `;
+
+    return;
+  }
+
+
+  if (!data || data.length === 0) {
+
+    mensaje.innerHTML = `
+      <p class="error">
+        No se pudo crear el intento.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  intentoActual = data[0];
+intentoActual.student_name = nombre;
+
+
+  /* Obtener las preguntas EXACTAS
+     asignadas al intento */
+
+  const resultadoPreguntas =
+    await supabaseClient.rpc(
+      "get_attempt_questions",
+      {
+        p_attempt_id: intentoActual.attempt_id
+      }
+    );
+
+
+  if (resultadoPreguntas.error) {
+
+    mensaje.innerHTML = `
+      <p class="error">
+        ❌ Error al cargar las preguntas.<br><br>
+        ${resultadoPreguntas.error.message}
+      </p>
+    `;
+
+    return;
+  }
+
+
+  preguntas = resultadoPreguntas.data || [];
+
+  respuestas = {};
+
+  preguntaActual = 0;
+
+
+  if (preguntas.length === 0) {
+
+    mensaje.innerHTML = `
+      <p class="error">
+        No se encontraron preguntas.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  mostrarPregunta();
+iniciarTemporizador();
+}
+
+
+/* =========================================
+   MOSTRAR PREGUNTA
+========================================= */
+
+function mostrarPregunta() {
+
+  const app = document.getElementById("app");
+
+  const pregunta =
+    preguntas[preguntaActual];
+
+  const respuestaSeleccionada =
+    respuestas[pregunta.id];
+
+
+  app.innerHTML = `
+
+    <div class="tarjeta">
+
+      <!-- TEMPORIZADOR -->
+
+      <div style="
+        text-align:center;
+        margin-bottom:20px;
+        padding:12px;
+        border-radius:12px;
+        background:#f3f4f6;
+      ">
+
+        <div style="
+          font-size:14px;
+          color:#666;
+          margin-bottom:4px;
+        ">
+          ⏱️ Tiempo restante
+        </div>
+
+        <div
+          id="temporizador"
+          style="
+            font-size:28px;
+            font-weight:bold;
+          "
+        >
+          --:--
+        </div>
+
+      </div>
+
+
+      <div class="progreso">
+
+        Pregunta
+        <strong>
+          ${preguntaActual + 1}
+        </strong>
+
+        de
+
+        <strong>
+          ${preguntas.length}
+        </strong>
+
+      </div>
+
+
+      <div class="materia">
+
+        📚 ${pregunta.subject}
+
+      </div>
+
+
+      <div class="pregunta">
+
+        ${pregunta.question_text}
+
+      </div>
+
+
+      ${
+        pregunta.image_url
+        ?
+        `<img
+          src="${pregunta.image_url}"
+          style="max-width:100%; border-radius:10px; margin-bottom:20px;"
+          alt="Imagen de la pregunta">`
+        :
+        ""
+      }
+
+
+      ${crearOpcion(
+        1,
+        pregunta.option_a,
+        respuestaSeleccionada
+      )}
+
+      ${crearOpcion(
+        2,
+        pregunta.option_b,
+        respuestaSeleccionada
+      )}
+
+      ${crearOpcion(
+        3,
+        pregunta.option_c,
+        respuestaSeleccionada
+      )}
+
+      ${crearOpcion(
+        4,
+        pregunta.option_d,
+        respuestaSeleccionada
+      )}
+
+
+      <div class="navegacion">
+
+        ${
+          preguntaActual > 0
+          ?
+          `<button onclick="preguntaAnterior()">
+             ◀ Anterior
+           </button>`
+          :
+          `<span></span>`
+        }
+
+
+        ${
+          preguntaActual < preguntas.length - 1
+          ?
+          `<button onclick="preguntaSiguiente()">
+             Siguiente ▶
+           </button>`
+          :
+          `<button onclick="finalizarPrueba()">
+             Finalizar
+           </button>`
+        }
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+
+/* =========================================
+   INICIAR TEMPORIZADOR
+========================================= */
+
+function iniciarTemporizador() {
+
+  // Si existía un temporizador anterior, lo detenemos
+  if (temporizador) {
+    clearInterval(temporizador);
+  }
+
+  // Tiempo total configurado para el simulador
+  const tiempoTotal =
+    Number(testSeleccionado.time_minutes) * 60;
+
+  // Hora exacta en que comenzó el intento
+  const inicio =
+    new Date(intentoActual.started_at).getTime();
+
+  temporizador = setInterval(() => {
+
+    const ahora = Date.now();
+
+    const transcurrido =
+      Math.floor((ahora - inicio) / 1000);
+
+    tiempoRestante =
+      Math.max(0, tiempoTotal - transcurrido);
+
+    const minutos =
+      Math.floor(tiempoRestante / 60);
+
+    const segundos =
+      tiempoRestante % 60;
+
+    const elemento =
+      document.getElementById("temporizador");
+
+    if (elemento) {
+
+      elemento.textContent =
+        `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+
+    }
+
+    // Cuando llega a cero
+if (tiempoRestante <= 0) {
+
+  clearInterval(temporizador);
+
+  temporizador = null;
+
+  finalizarPrueba(true);
+
+}
+
+  }, 1000);
+}
+
+
+/* =========================================
+   CREAR OPCIÓN
+========================================= */
+
+function crearOpcion(numero, texto, seleccionada) {
+
+  return `
+    <button
+      class="opcion ${seleccionada === numero ? "seleccionada" : ""}"
+      onclick="seleccionarRespuesta(${numero})">
+
+      ${String.fromCharCode(64 + numero)}.
+      ${texto}
+
+    </button>
+  `;
+}
+
+
+/* =========================================
+   SELECCIONAR RESPUESTA
+========================================= */
+
+function seleccionarRespuesta(numero) {
+
+  const pregunta =
+    preguntas[preguntaActual];
+
+  respuestas[pregunta.id] =
+    numero;
+
+  mostrarPregunta();
+}
+
+
+/* =========================================
+   NAVEGACIÓN
+========================================= */
+
+function preguntaSiguiente() {
+
+  if (preguntaActual < preguntas.length - 1) {
+
+    preguntaActual++;
+
+    mostrarPregunta();
+
+  }
+
+}
+
+
+function preguntaAnterior() {
+
+  if (preguntaActual > 0) {
+
+    preguntaActual--;
+
+    mostrarPregunta();
+
+  }
+
+}
+
+
+/* =========================================
+   FINALIZAR PRUEBA
+========================================= */
+
+async function finalizarPrueba(automatico = false) {
+
+  const sinResponder = preguntas.filter(
+    p => respuestas[p.id] == null
+  );
+
+  if (sinResponder.length > 0 && !automatico) {
+
+    const continuar = confirm(
+      `Tienes ${sinResponder.length} pregunta(s) sin responder.\n\n¿Quieres finalizar de todas formas?`
+    );
+
+    if (!continuar) return;
+  }
+
+  try {
+
+    // ==============================
+    // ENVIAR RESPUESTAS
+    // ==============================
+
+    const respuestasEnviar = preguntas.map(p => ({
+      question_id: p.id,
+      selected_option: respuestas[p.id] ?? null
+    }));
+
+    const { data, error } =
+      await supabaseClient.rpc(
+        "submit_exam",
+        {
+          p_attempt_id: intentoActual.attempt_id,
+          p_answers: respuestasEnviar
+        }
+      );
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "No se pudo finalizar la prueba:\n" +
+        error.message
+      );
+
+      return;
+    }
+
+    if (!data || data.length === 0) {
+
+      alert(
+        "No se recibió el resultado del examen."
+      );
+
+      return;
+    }
+
+    const resultado = data[0];
+
+    // ==============================
+    // DATOS DEL RESULTADO
+    // ==============================
+
+    const nombre =
+      intentoActual.student_name;
+
+    const porcentaje =
+      Number(resultado.percentage);
+
+    const correctas =
+      Number(resultado.correct_answers);
+
+    const total =
+      Number(resultado.total_questions);
+
+    // ==============================
+    // MENSAJE PERSONALIZADO
+    // ==============================
+
+    let mensajeResultado = "";
+
+    if (porcentaje >= 90) {
+
+      mensajeResultado =
+        "¡Excelente resultado! Estás demostrando un gran nivel de preparación.";
+
+    } else if (porcentaje >= 70) {
+
+      mensajeResultado =
+        "¡Muy buen resultado! Vas por buen camino. Continúa fortaleciendo tus conocimientos.";
+
+    } else if (porcentaje >= 50) {
+
+      mensajeResultado =
+        "Buen esfuerzo. Identifica tus áreas de mejora y sigue practicando.";
+
+    } else {
+
+      mensajeResultado =
+        "Este resultado es una oportunidad para mejorar. Sigue practicando y fortalece tus conocimientos.";
+    }
+
+    // ==============================
+    // OBTENER DESGLOSE POR MATERIA
+    // ==============================
+
+    const {
+      data: desglose,
+      error: errorDesglose
+    } = await supabaseClient.rpc(
+      "get_public_result_breakdown",
+      {
+        p_result_id: resultado.result_id
+      }
+    );
+
+    if (errorDesglose) {
+
+      console.error(
+        "Error obteniendo desglose:",
+        errorDesglose
+      );
+    }
+
+    // ==============================
+    // CREAR HTML DEL DESGLOSE
+    // ==============================
+
+    let htmlDesglose = "";
+
+    if (desglose && desglose.length > 0) {
+
+      htmlDesglose = desglose.map(materia => {
+
+        const porcentajeMateria =
+          Number(materia.percentage);
+
+        let icono = "🔴";
+
+        if (porcentajeMateria >= 70) {
+          icono = "🟢";
+        } else if (porcentajeMateria >= 50) {
+          icono = "🟡";
+        }
+
+        return `
+          <div style="
+            padding:16px;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            margin-bottom:10px;
+            background:#ffffff;
+          ">
+
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:10px;
+              flex-wrap:wrap;
+            ">
+
+              <div>
+                <strong style="font-size:17px;">
+                  ${icono} ${materia.subject}
+                </strong>
+
+                <div style="
+                  font-size:14px;
+                  color:#666;
+                  margin-top:4px;
+                ">
+                  ${materia.correct_answers}
+                  de
+                  ${materia.total_questions}
+                  respuestas correctas
+                </div>
+              </div>
+
+              <strong style="
+                font-size:22px;
+              ">
+                ${porcentajeMateria}%
+              </strong>
+
+            </div>
+
+            <div style="
+              width:100%;
+              height:8px;
+              background:#e5e7eb;
+              border-radius:10px;
+              margin-top:12px;
+              overflow:hidden;
+            ">
+
+              <div style="
+                width:${porcentajeMateria}%;
+                height:100%;
+                background:${
+                  porcentajeMateria >= 70
+                    ? "#22c55e"
+                    : porcentajeMateria >= 50
+                      ? "#eab308"
+                      : "#ef4444"
+                };
+                border-radius:10px;
+              "></div>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("");
+
+    } else {
+
+      htmlDesglose = `
+        <p style="
+          color:#666;
+          text-align:center;
+        ">
+          No se pudo obtener el desglose por materia.
+        </p>
+      `;
+    }
+
+    // ==============================
+    // MOSTRAR RESULTADO FINAL
+    // ==============================
+
+    document.getElementById("app").innerHTML = `
+
+      <div
+        class="tarjeta"
+        style="
+          text-align:center;
+          max-width:700px;
+          margin:30px auto;
+          padding:35px;
+        "
+      >
+
+        <div style="
+          font-size:52px;
+          margin-bottom:10px;
+        ">
+          🎓
+        </div>
+
+        <h1 style="
+          margin-bottom:8px;
+        ">
+          ¡Prueba finalizada!
+        </h1>
+
+        <p style="
+          font-size:18px;
+          margin-bottom:25px;
+        ">
+          ${mensajeResultado}
+        </p>
+
+        <!-- PORCENTAJE -->
+
+        <div style="
+          font-size:64px;
+          font-weight:bold;
+          margin:20px 0;
+        ">
+          ${porcentaje}%
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+
+        <div style="
+          display:grid;
+          grid-template-columns:repeat(2, 1fr);
+          gap:15px;
+          margin:25px 0;
+        ">
+
+          <div style="
+            padding:20px;
+            border-radius:12px;
+            background:#f3f4f6;
+          ">
+
+            <div style="
+              font-size:30px;
+            ">
+              ✅
+            </div>
+
+            <strong style="
+              font-size:24px;
+            ">
+              ${correctas}
+            </strong>
+
+            <div>
+              Respuestas correctas
+            </div>
+
+          </div>
+
+          <div style="
+            padding:20px;
+            border-radius:12px;
+            background:#f3f4f6;
+          ">
+
+            <div style="
+              font-size:30px;
+            ">
+              📝
+            </div>
+
+            <strong style="
+              font-size:24px;
+            ">
+              ${total}
+            </strong>
+
+            <div>
+              Total de preguntas
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- INFORMACIÓN DEL ESTUDIANTE -->
+
+        <div style="
+          margin-top:25px;
+          padding:18px;
+          border-radius:12px;
+          background:#f8fafc;
+          text-align:left;
+        ">
+
+          <p style="
+            margin:5px 0;
+          ">
+            <strong>Estudiante:</strong>
+            ${nombre}
+          </p>
+
+          <p style="
+            margin:5px 0;
+          ">
+            <strong>Simulador:</strong>
+            ${testSeleccionado.test_name}
+          </p>
+
+          <p style="
+            margin:5px 0;
+          ">
+            <strong>Universidad:</strong>
+            ${testSeleccionado.university_name}
+          </p>
+
+        </div>
+
+        <!-- DESGLOSE -->
+
+        <div style="
+          margin-top:30px;
+          text-align:left;
+        ">
+
+          <h2 style="
+            margin-bottom:18px;
+            text-align:center;
+          ">
+            📊 Rendimiento por materia
+          </h2>
+
+          ${htmlDesglose}
+
+        </div>
+
+        <p style="
+          margin-top:30px;
+          font-size:15px;
+          color:#666;
+        ">
+          Preuniversitario CAAES
+        </p>
+
+      </div>
+
+    `;
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Ocurrió un error al finalizar la prueba."
+    );
+  }
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+function mostrarError(mensaje) {
+
+  document.getElementById("app").innerHTML = `
+    <div class="tarjeta error">
+      ❌ ${mensaje}
+    </div>
+  `;
+
+}
+
+
+/* =========================================
+   INICIO
+========================================= */
+
+cargarCatalogo();
+
+</script>
+
+</body>
+</html>
