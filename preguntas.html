@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Preguntas | CAAES</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 30px;
+      color: #111827;
+    }
+
+    .contenedor {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .encabezado {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .volver {
+      display: inline-block;
+      margin-bottom: 15px;
+      text-decoration: none;
+      color: #2563eb;
+      font-weight: bold;
+    }
+
+    .pregunta {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .materia {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .texto-pregunta {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .opcion {
+      padding: 8px 0;
+    }
+
+    .correcta {
+      color: #15803d;
+      font-weight: bold;
+    }
+
+    .estado {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .cargando {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 20px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="contenedor">
+
+    <div class="encabezado">
+
+      <a href="admin.html" class="volver">
+        ← Volver al panel
+      </a>
+
+      <h1>📝 Banco de preguntas</h1>
+
+      <p>
+        Preguntas registradas actualmente en Supabase.
+      </p>
+
+    </div>
+
+    <div id="contenido">
+      <div class="cargando">
+        ⏳ Cargando preguntas...
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+
+    const SUPABASE_URL =
+      "https://uetdixjvbxqldanjwbpg.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_UdFDD9V9erD05CAVy3_mFQ_oRVY8_r-";
+
+    const supabaseClient =
+      supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+
+
+    async function verificarAdministrador() {
+
+      const {
+        data: {
+          session
+        }
+      } = await supabaseClient.auth.getSession();
+
+
+      if (!session) {
+
+        window.location.href = "login.html";
+
+        return false;
+      }
+
+
+      const {
+        data: administrador,
+        error
+      } = await supabaseClient
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+
+      if (error || !administrador) {
+
+        await supabaseClient.auth.signOut();
+
+        document.body.innerHTML = `
+          <div style="
+            max-width:500px;
+            margin:80px auto;
+            padding:30px;
+            text-align:center;
+            font-family:Arial;
+          ">
+
+            <h1>⛔ Acceso denegado</h1>
+
+            <p>
+              Esta cuenta no tiene permisos de administrador.
+            </p>
+
+          </div>
+        `;
+
+        return false;
+      }
+
+      return true;
+    }
+
+
+    async function cargarPreguntas() {
+
+      const {
+        data: preguntas,
+        error
+      } = await supabaseClient
+        .from("questions")
+        .select("*")
+        .order("created_at", {
+          ascending: false
+        });
+
+
+      const contenido =
+        document.getElementById("contenido");
+
+
+      if (error) {
+
+        contenido.innerHTML = `
+          <div class="error">
+            <strong>Error al cargar las preguntas.</strong>
+            <br><br>
+            ${error.message}
+          </div>
+        `;
+
+        console.error(error);
+
+        return;
+      }
+
+
+      if (!preguntas || preguntas.length === 0) {
+
+        contenido.innerHTML = `
+          <div class="cargando">
+            📭 Todavía no existen preguntas registradas.
+          </div>
+        `;
+
+        return;
+      }
+
+
+      contenido.innerHTML = preguntas.map((pregunta, indice) => {
+
+        const respuestaCorrecta =
+          pregunta[
+            "option_" +
+            ["a", "b", "c", "d"][
+              pregunta.correct_option - 1
+            ]
+          ];
+
+
+        return `
+
+          <div class="pregunta">
+
+            <div class="materia">
+              ${pregunta.subject}
+            </div>
+
+            <div class="texto-pregunta">
+              ${indice + 1}. ${pregunta.question_text}
+            </div>
+
+            <div class="opcion ${
+              pregunta.correct_option === 1
+                ? "correcta"
+                : ""
+            }">
+              A. ${pregunta.option_a}
+            </div>
+
+            <div class="opcion ${
+              pregunta.correct_option === 2
+                ? "correcta"
+                : ""
+            }">
+              B. ${pregunta.option_b}
+            </div>
+
+            <div class="opcion ${
+              pregunta.correct_option === 3
+                ? "correcta"
+                : ""
+            }">
+              C. ${pregunta.option_c}
+            </div>
+
+            <div class="opcion ${
+              pregunta.correct_option === 4
+                ? "correcta"
+                : ""
+            }">
+              D. ${pregunta.option_d}
+            </div>
+
+            <div class="estado">
+              ${pregunta.active ? "🟢 Activa" : "🔴 Inactiva"}
+            </div>
+
+          </div>
+
+        `;
+
+      }).join("");
+    }
+
+
+    async function iniciar() {
+
+      const autorizado =
+        await verificarAdministrador();
+
+      if (!autorizado) return;
+
+      await cargarPreguntas();
+
+    }
+
+
+    iniciar();
+
+  </script>
+
+</body>
+</html>
