@@ -338,6 +338,131 @@
     }
 
 
+    function editarPregunta(id) {
+
+  const pregunta = preguntas.find(p => p.id === id);
+
+  if (!pregunta) {
+    alert("No se encontró la pregunta.");
+    return;
+  }
+
+  const contenido = document.getElementById("contenido");
+
+  contenido.innerHTML = `
+
+    <div class="pregunta">
+
+      <h2>✏️ Editar pregunta</h2>
+
+      <label>Materia</label>
+
+      <select id="editar_materia"
+        style="
+          width:100%;
+          padding:10px;
+          margin:8px 0 15px;
+        "
+      >
+        <option value="Matemáticas" ${pregunta.subject === "Matemáticas" ? "selected" : ""}>Matemáticas</option>
+        <option value="Lengua" ${pregunta.subject === "Lengua" ? "selected" : ""}>Lengua</option>
+        <option value="Física" ${pregunta.subject === "Física" ? "selected" : ""}>Física</option>
+        <option value="Química" ${pregunta.subject === "Química" ? "selected" : ""}>Química</option>
+        <option value="Emprendimiento" ${pregunta.subject === "Emprendimiento" ? "selected" : ""}>Emprendimiento</option>
+      </select>
+
+      <label>Pregunta</label>
+
+      <textarea
+        id="editar_pregunta"
+        style="
+          width:100%;
+          min-height:100px;
+          padding:10px;
+          margin:8px 0 15px;
+        "
+      >${pregunta.question_text}</textarea>
+
+      <label>Opción A</label>
+      <input
+        id="editar_a"
+        value="${pregunta.option_a}"
+        style="width:100%;padding:10px;margin:8px 0 15px;"
+      >
+
+      <label>Opción B</label>
+      <input
+        id="editar_b"
+        value="${pregunta.option_b}"
+        style="width:100%;padding:10px;margin:8px 0 15px;"
+      >
+
+      <label>Opción C</label>
+      <input
+        id="editar_c"
+        value="${pregunta.option_c}"
+        style="width:100%;padding:10px;margin:8px 0 15px;"
+      >
+
+      <label>Opción D</label>
+      <input
+        id="editar_d"
+        value="${pregunta.option_d}"
+        style="width:100%;padding:10px;margin:8px 0 15px;"
+      >
+
+      <label>Respuesta correcta</label>
+
+      <select
+        id="editar_correcta"
+        style="
+          width:100%;
+          padding:10px;
+          margin:8px 0 15px;
+        "
+      >
+        <option value="1" ${pregunta.correct_option === 1 ? "selected" : ""}>A</option>
+        <option value="2" ${pregunta.correct_option === 2 ? "selected" : ""}>B</option>
+        <option value="3" ${pregunta.correct_option === 3 ? "selected" : ""}>C</option>
+        <option value="4" ${pregunta.correct_option === 4 ? "selected" : ""}>D</option>
+      </select>
+
+      <button
+        onclick="guardarEdicion('${pregunta.id}')"
+        style="
+          padding:12px 18px;
+          border:none;
+          border-radius:8px;
+          background:#2563eb;
+          color:white;
+          cursor:pointer;
+          font-size:15px;
+        "
+      >
+        💾 Guardar cambios
+      </button>
+
+      <button
+        onclick="cargarPreguntas()"
+        style="
+          padding:12px 18px;
+          border:none;
+          border-radius:8px;
+          background:#6b7280;
+          color:white;
+          cursor:pointer;
+          font-size:15px;
+          margin-left:8px;
+        "
+      >
+        Cancelar
+      </button>
+
+    </div>
+  `;
+}
+
+    
     function mostrarFormulario() {
 
   const contenido =
