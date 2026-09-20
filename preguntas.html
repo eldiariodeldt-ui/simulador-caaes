@@ -109,9 +109,25 @@
 
       <h1>📝 Banco de preguntas</h1>
 
-      <p>
-        Preguntas registradas actualmente en Supabase.
-      </p>
+<p>
+  Preguntas registradas actualmente en Supabase.
+</p>
+
+<button
+  onclick="mostrarFormulario()"
+  style="
+    margin-top:15px;
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    background:#111827;
+    color:white;
+    cursor:pointer;
+    font-size:15px;
+  "
+>
+  ➕ Nueva pregunta
+</button>
 
     </div>
 
@@ -304,6 +320,296 @@
 
       }).join("");
     }
+
+
+    function mostrarFormulario() {
+
+  const contenido =
+    document.getElementById("contenido");
+
+  contenido.innerHTML = `
+
+    <div class="pregunta">
+
+      <h2>➕ Nueva pregunta</h2>
+
+      <label>
+        Materia
+      </label>
+
+      <select id="nueva_materia"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+        <option value="Matemáticas">Matemáticas</option>
+        <option value="Lengua">Lengua</option>
+        <option value="Física">Física</option>
+        <option value="Química">Química</option>
+        <option value="Emprendimiento">Emprendimiento</option>
+      </select>
+
+
+      <label>
+        Pregunta
+      </label>
+
+      <textarea
+        id="nueva_pregunta"
+        rows="4"
+        placeholder="Escribe aquí la pregunta..."
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+          resize:vertical;
+        "
+      ></textarea>
+
+
+      <label>
+        Opción A
+      </label>
+
+      <input
+        id="nueva_a"
+        type="text"
+        placeholder="Opción A"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+
+
+      <label>
+        Opción B
+      </label>
+
+      <input
+        id="nueva_b"
+        type="text"
+        placeholder="Opción B"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+
+
+      <label>
+        Opción C
+      </label>
+
+      <input
+        id="nueva_c"
+        type="text"
+        placeholder="Opción C"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+
+
+      <label>
+        Opción D
+      </label>
+
+      <input
+        id="nueva_d"
+        type="text"
+        placeholder="Opción D"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+
+
+      <label>
+        Respuesta correcta
+      </label>
+
+      <select
+        id="nueva_correcta"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 20px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+        <option value="1">A</option>
+        <option value="2">B</option>
+        <option value="3">C</option>
+        <option value="4">D</option>
+      </select>
+
+
+      <button
+        onclick="guardarPregunta()"
+        style="
+          padding:12px 18px;
+          border:none;
+          border-radius:10px;
+          background:#15803d;
+          color:white;
+          cursor:pointer;
+          font-size:15px;
+          margin-right:8px;
+        "
+      >
+        💾 Guardar pregunta
+      </button>
+
+
+      <button
+        onclick="cargarPreguntas()"
+        style="
+          padding:12px 18px;
+          border:none;
+          border-radius:10px;
+          background:#6b7280;
+          color:white;
+          cursor:pointer;
+          font-size:15px;
+        "
+      >
+        Cancelar
+      </button>
+
+      <div
+        id="mensaje_guardado"
+        style="
+          margin-top:15px;
+          font-weight:bold;
+        "
+      ></div>
+
+    </div>
+
+  `;
+}
+
+
+    async function guardarPregunta() {
+
+  const materia =
+    document.getElementById("nueva_materia").value;
+
+  const pregunta =
+    document.getElementById("nueva_pregunta").value.trim();
+
+  const opcionA =
+    document.getElementById("nueva_a").value.trim();
+
+  const opcionB =
+    document.getElementById("nueva_b").value.trim();
+
+  const opcionC =
+    document.getElementById("nueva_c").value.trim();
+
+  const opcionD =
+    document.getElementById("nueva_d").value.trim();
+
+  const correcta =
+    Number(
+      document.getElementById("nueva_correcta").value
+    );
+
+  const mensaje =
+    document.getElementById("mensaje_guardado");
+
+
+  if (
+    !pregunta ||
+    !opcionA ||
+    !opcionB ||
+    !opcionC ||
+    !opcionD
+  ) {
+
+    mensaje.textContent =
+      "⚠️ Completa todos los campos.";
+
+    mensaje.style.color = "#b91c1c";
+
+    return;
+  }
+
+
+  mensaje.textContent =
+    "⏳ Guardando pregunta...";
+
+  mensaje.style.color = "#374151";
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("questions")
+    .insert({
+      subject: materia,
+      question_text: pregunta,
+      option_a: opcionA,
+      option_b: opcionB,
+      option_c: opcionC,
+      option_d: opcionD,
+      correct_option: correcta,
+      active: true
+    })
+    .select()
+    .single();
+
+
+  if (error) {
+
+    console.error(error);
+
+    mensaje.textContent =
+      "❌ No se pudo guardar: " +
+      error.message;
+
+    mensaje.style.color = "#b91c1c";
+
+    return;
+  }
+
+
+  mensaje.textContent =
+    "✅ Pregunta guardada correctamente.";
+
+  mensaje.style.color = "#15803d";
+
+
+  setTimeout(() => {
+
+    cargarPreguntas();
+
+  }, 1000);
+
+}
 
 
     async function iniciar() {
