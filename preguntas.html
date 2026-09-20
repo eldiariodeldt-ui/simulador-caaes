@@ -314,6 +314,22 @@
               ${pregunta.active ? "🟢 Activa" : "🔴 Inactiva"}
             </div>
 
+<div style="margin-top:15px;">
+  <button
+    onclick="editarPregunta('${pregunta.id}')"
+    style="
+      padding:10px 16px;
+      border:none;
+      border-radius:8px;
+      background:#2563eb;
+      color:white;
+      cursor:pointer;
+      font-size:14px;
+    "
+  >
+    ✏️ Editar
+  </button>
+</div>
           </div>
 
         `;
