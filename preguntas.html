@@ -465,6 +465,67 @@
   `;
 }
 
+
+    async function guardarEdicion(id) {
+
+  const materia =
+    document.getElementById("editar_materia").value;
+
+  const pregunta =
+    document.getElementById("editar_pregunta").value.trim();
+
+  const opcionA =
+    document.getElementById("editar_a").value.trim();
+
+  const opcionB =
+    document.getElementById("editar_b").value.trim();
+
+  const opcionC =
+    document.getElementById("editar_c").value.trim();
+
+  const opcionD =
+    document.getElementById("editar_d").value.trim();
+
+  const correcta =
+    Number(
+      document.getElementById("editar_correcta").value
+    );
+
+  if (
+    !pregunta ||
+    !opcionA ||
+    !opcionB ||
+    !opcionC ||
+    !opcionD
+  ) {
+    alert("⚠️ Completa todos los campos.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("questions")
+    .update({
+      subject: materia,
+      question_text: pregunta,
+      option_a: opcionA,
+      option_b: opcionB,
+      option_c: opcionC,
+      option_d: opcionD,
+      correct_option: correcta
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    alert("❌ No se pudo actualizar la pregunta: " + error.message);
+    return;
+  }
+
+  alert("✅ Pregunta actualizada correctamente.");
+
+  await cargarPreguntas();
+}
+
     
     function mostrarFormulario() {
 
