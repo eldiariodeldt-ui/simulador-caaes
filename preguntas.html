@@ -153,6 +153,7 @@
         SUPABASE_KEY
       );
 
+    let preguntas = [];
 
     async function verificarAdministrador() {
 
@@ -213,7 +214,7 @@
     async function cargarPreguntas() {
 
       const {
-        data: preguntas,
+        data,
         error
       } = await supabaseClient
         .from("questions")
@@ -243,6 +244,8 @@
       }
 
 
+      preguntas = data || [];
+      
       if (!preguntas || preguntas.length === 0) {
 
         contenido.innerHTML = `
