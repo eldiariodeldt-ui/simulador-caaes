@@ -689,6 +689,25 @@ ${
 
 
       <label>
+  🖼️ Imagen de la pregunta
+</label>
+
+<input
+  id="nueva_imagen"
+  type="file"
+  accept="image/png,image/jpeg,image/webp"
+  style="
+    width:100%;
+    padding:12px;
+    margin:8px 0 20px;
+    border-radius:8px;
+    border:1px solid #d1d5db;
+    background:white;
+  "
+>      
+
+
+      <label>
         Opción A
       </label>
 
@@ -852,6 +871,9 @@ ${
       document.getElementById("nueva_correcta").value
     );
 
+  const archivoImagen =
+    document.getElementById("nueva_imagen").files[0];
+
   const mensaje =
     document.getElementById("mensaje_guardado");
 
@@ -879,6 +901,61 @@ ${
   mensaje.style.color = "#374151";
 
 
+  let imageUrl = null;
+
+
+  /*
+    SUBIR IMAGEN SI SE SELECCIONÓ UNA
+  */
+
+  if (archivoImagen) {
+
+    const extension =
+      archivoImagen.name.split(".").pop().toLowerCase();
+
+    const nombreArchivo =
+      `${crypto.randomUUID()}.${extension}`;
+
+
+    const {
+      error: errorSubida
+    } = await supabaseClient
+      .storage
+      .from("question-images")
+      .upload(nombreArchivo, archivoImagen);
+
+
+    if (errorSubida) {
+
+      console.error(errorSubida);
+
+      mensaje.textContent =
+        "❌ No se pudo subir la imagen: " +
+        errorSubida.message;
+
+      mensaje.style.color = "#b91c1c";
+
+      return;
+    }
+
+
+    const {
+      data: urlData
+    } = supabaseClient
+      .storage
+      .from("question-images")
+      .getPublicUrl(nombreArchivo);
+
+
+    imageUrl =
+      urlData.publicUrl;
+  }
+
+
+  /*
+    GUARDAR PREGUNTA
+  */
+
   const {
     data,
     error
@@ -887,6 +964,7 @@ ${
     .insert({
       subject: materia,
       question_text: pregunta,
+      image_url: imageUrl,
       option_a: opcionA,
       option_b: opcionB,
       option_c: opcionC,
