@@ -281,6 +281,27 @@
               ${indice + 1}. ${pregunta.question_text}
             </div>
 
+            ${
+  pregunta.image_url
+    ? `
+      <div style="margin:15px 0;">
+        <img
+          src="${pregunta.image_url}"
+          alt="Imagen de la pregunta"
+          style="
+            max-width:100%;
+            max-height:300px;
+            display:block;
+            margin:auto;
+            border-radius:10px;
+            object-fit:contain;
+          "
+        >
+      </div>
+    `
+    : ""
+}
+
             <div class="opcion ${
               pregunta.correct_option === 1
                 ? "correcta"
