@@ -332,6 +332,23 @@
   >
     ✏️ Editar
   </button>
+
+  <button
+  onclick="eliminarPregunta('${pregunta.id}')"
+  style="
+    padding:10px 16px;
+    border:none;
+    border-radius:8px;
+    background:#dc2626;
+    color:white;
+    cursor:pointer;
+    font-size:14px;
+    margin-left:8px;
+  "
+>
+  🗑️ Eliminar
+</button>
+
 </div>
           </div>
 
@@ -526,7 +543,39 @@
   await cargarPreguntas();
 }
 
-    
+
+    async function eliminarPregunta(id) {
+
+  const confirmar = confirm(
+    "⚠️ ¿Estás seguro de que quieres eliminar esta pregunta?\n\nEsta acción no se puede deshacer."
+  );
+
+  if (!confirmar) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("questions")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+
+    alert(
+      "❌ No se pudo eliminar la pregunta.\n\n" +
+      error.message
+    );
+
+    return;
+  }
+
+  alert("✅ Pregunta eliminada correctamente.");
+
+  await cargarPreguntas();
+}    
+
+        
     function mostrarFormulario() {
 
   const contenido =
