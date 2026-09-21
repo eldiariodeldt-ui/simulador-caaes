@@ -446,6 +446,52 @@ ${
         "
       >${pregunta.question_text}</textarea>
 
+      <label>
+  🖼️ Imagen de la pregunta
+</label>
+
+${
+  pregunta.image_url
+    ? `
+      <div style="margin:10px 0 15px;">
+        <img
+          src="${pregunta.image_url}"
+          alt="Imagen actual de la pregunta"
+          style="
+            max-width:100%;
+            max-height:250px;
+            display:block;
+            margin-bottom:10px;
+            border-radius:10px;
+            object-fit:contain;
+          "
+        >
+      </div>
+    `
+    : `
+      <p style="
+        color:#6b7280;
+        margin:8px 0 10px;
+      ">
+        Esta pregunta no tiene una imagen.
+      </p>
+    `
+}
+
+<input
+  id="editar_imagen"
+  type="file"
+  accept="image/png,image/jpeg,image/webp"
+  style="
+    width:100%;
+    padding:12px;
+    margin:8px 0 20px;
+    border-radius:8px;
+    border:1px solid #d1d5db;
+    background:white;
+  "
+>
+
       <label>Opción A</label>
       <input
         id="editar_a"
@@ -551,6 +597,9 @@ ${
       document.getElementById("editar_correcta").value
     );
 
+  const archivoImagen =
+    document.getElementById("editar_imagen").files[0];
+
   if (
     !pregunta ||
     !opcionA ||
@@ -562,22 +611,78 @@ ${
     return;
   }
 
+  const datosActualizar = {
+    subject: materia,
+    question_text: pregunta,
+    option_a: opcionA,
+    option_b: opcionB,
+    option_c: opcionC,
+    option_d: opcionD,
+    correct_option: correcta
+  };
+
+
+  /*
+    SUBIR NUEVA IMAGEN SI SE SELECCIONÓ UNA
+  */
+
+  if (archivoImagen) {
+
+    const extension =
+      archivoImagen.name.split(".").pop().toLowerCase();
+
+    const nombreArchivo =
+      `${crypto.randomUUID()}.${extension}`;
+
+    const {
+      error: errorSubida
+    } = await supabaseClient
+      .storage
+      .from("question-images")
+      .upload(nombreArchivo, archivoImagen);
+
+    if (errorSubida) {
+
+      console.error(errorSubida);
+
+      alert(
+        "❌ No se pudo subir la nueva imagen: " +
+        errorSubida.message
+      );
+
+      return;
+    }
+
+    const {
+      data: urlData
+    } = supabaseClient
+      .storage
+      .from("question-images")
+      .getPublicUrl(nombreArchivo);
+
+    datosActualizar.image_url =
+      urlData.publicUrl;
+  }
+
+
+  /*
+    ACTUALIZAR PREGUNTA
+  */
+
   const { error } = await supabaseClient
     .from("questions")
-    .update({
-      subject: materia,
-      question_text: pregunta,
-      option_a: opcionA,
-      option_b: opcionB,
-      option_c: opcionC,
-      option_d: opcionD,
-      correct_option: correcta
-    })
+    .update(datosActualizar)
     .eq("id", id);
 
   if (error) {
+
     console.error(error);
-    alert("❌ No se pudo actualizar la pregunta: " + error.message);
+
+    alert(
+      "❌ No se pudo actualizar la pregunta: " +
+      error.message
+    );
+
     return;
   }
 
