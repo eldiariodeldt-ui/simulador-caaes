@@ -319,35 +319,57 @@
 
 <div style="margin-top:15px;">
   <button
-    onclick="editarPregunta('${pregunta.id}')"
-    style="
-      padding:10px 16px;
-      border:none;
-      border-radius:8px;
-      background:#2563eb;
-      color:white;
-      cursor:pointer;
-      font-size:14px;
-    "
-  >
-    ✏️ Editar
-  </button>
-
-  <button
-  onclick="eliminarPregunta('${pregunta.id}')"
+  onclick="editarPregunta('${pregunta.id}')"
   style="
     padding:10px 16px;
     border:none;
     border-radius:8px;
-    background:#dc2626;
+    background:#2563eb;
     color:white;
     cursor:pointer;
     font-size:14px;
-    margin-left:8px;
   "
 >
-  🗑️ Eliminar
+  ✏️ Editar
 </button>
+
+${
+  pregunta.active
+    ? `
+      <button
+        onclick="eliminarPregunta('${pregunta.id}')"
+        style="
+          padding:10px 16px;
+          border:none;
+          border-radius:8px;
+          background:#dc2626;
+          color:white;
+          cursor:pointer;
+          font-size:14px;
+          margin-left:8px;
+        "
+      >
+        🗑️ Desactivar
+      </button>
+    `
+    : `
+      <button
+        onclick="reactivarPregunta('${pregunta.id}')"
+        style="
+          padding:10px 16px;
+          border:none;
+          border-radius:8px;
+          background:#16a34a;
+          color:white;
+          cursor:pointer;
+          font-size:14px;
+          margin-left:8px;
+        "
+      >
+        🔄 Reactivar
+      </button>
+    `
+}
 
 </div>
           </div>
@@ -577,9 +599,44 @@
   alert("✅ Pregunta eliminada correctamente.");
 
   await cargarPreguntas();
-}    
+}
 
-        
+    
+    async function reactivarPregunta(id) {
+
+  const confirmar = confirm(
+    "¿Quieres reactivar esta pregunta?\n\n" +
+    "La pregunta volverá a estar disponible para los simuladores."
+  );
+
+  if (!confirmar) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("questions")
+    .update({
+      active: true
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+
+    alert(
+      "❌ No se pudo reactivar la pregunta.\n\n" +
+      error.message
+    );
+
+    return;
+  }
+
+  alert("✅ Pregunta reactivada correctamente.");
+
+  await cargarPreguntas();
+}
+
+    
     function mostrarFormulario() {
 
   const contenido =
