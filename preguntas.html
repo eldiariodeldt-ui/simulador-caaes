@@ -547,7 +547,9 @@
     async function eliminarPregunta(id) {
 
   const confirmar = confirm(
-    "⚠️ ¿Estás seguro de que quieres eliminar esta pregunta?\n\nEsta acción no se puede deshacer."
+    "⚠️ ¿Estás seguro de que quieres eliminar esta pregunta?\n\n" +
+    "La pregunta dejará de estar disponible para los simuladores, " +
+    "pero se conservará para mantener el historial de resultados."
   );
 
   if (!confirmar) {
@@ -556,14 +558,16 @@
 
   const { error } = await supabaseClient
     .from("questions")
-    .delete()
+    .update({
+      active: false
+    })
     .eq("id", id);
 
   if (error) {
     console.error(error);
 
     alert(
-      "❌ No se pudo eliminar la pregunta.\n\n" +
+      "❌ No se pudo desactivar la pregunta.\n\n" +
       error.message
     );
 
