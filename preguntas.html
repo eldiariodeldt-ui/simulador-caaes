@@ -495,6 +495,36 @@ ${
         <option value="Emprendimiento" ${pregunta.subject === "Emprendimiento" ? "selected" : ""}>Emprendimiento</option>
       </select>
 
+      <label>Área de evaluación</label>
+
+      <select
+        id="editar_area"
+        style="
+          width:100%;
+          padding:10px;
+          margin:8px 0 15px;
+        "
+      >
+
+        <option value="">
+          — Sin área —
+        </option>
+
+        ${areas.map(area => `
+          <option
+            value="${area.id}"
+            ${
+              pregunta.area_id === area.id
+                ? "selected"
+                : ""
+            }
+          >
+            ${area.name}
+          </option>
+        `).join("")}
+
+      </select>
+
       <label>Pregunta</label>
 
       <textarea
@@ -638,6 +668,9 @@ ${
   const materia =
     document.getElementById("editar_materia").value;
 
+  const areaId =
+  document.getElementById("editar_area").value || null;    
+
   const pregunta =
     document.getElementById("editar_pregunta").value.trim();
 
@@ -673,8 +706,9 @@ ${
   }
 
   const datosActualizar = {
-    subject: materia,
-    question_text: pregunta,
+  subject: materia,
+  area_id: areaId,
+  question_text: pregunta,
     option_a: opcionA,
     option_b: opcionB,
     option_c: opcionC,
@@ -853,6 +887,34 @@ ${
         <option value="Física">Física</option>
         <option value="Química">Química</option>
         <option value="Emprendimiento">Emprendimiento</option>
+      </select>
+
+
+      <label>
+        Área de evaluación
+      </label>
+
+      <select
+        id="nueva_area"
+        style="
+          width:100%;
+          padding:12px;
+          margin:8px 0 15px;
+          border-radius:8px;
+          border:1px solid #d1d5db;
+        "
+      >
+
+        <option value="">
+          — Seleccionar área —
+        </option>
+
+        ${areas.map(area => `
+          <option value="${area.id}">
+            ${area.name}
+          </option>
+        `).join("")}
+
       </select>
 
 
@@ -1038,6 +1100,9 @@ ${
   const materia =
     document.getElementById("nueva_materia").value;
 
+  const areaId =
+    document.getElementById("nueva_area").value || null;
+
   const pregunta =
     document.getElementById("nueva_pregunta").value.trim();
 
@@ -1149,8 +1214,9 @@ ${
   } = await supabaseClient
     .from("questions")
     .insert({
-      subject: materia,
-      question_text: pregunta,
+  subject: materia,
+  area_id: areaId,
+  question_text: pregunta,
       image_url: imageUrl,
       option_a: opcionA,
       option_b: opcionB,
@@ -1194,14 +1260,19 @@ ${
 
     async function iniciar() {
 
-      const autorizado =
-        await verificarAdministrador();
+  const autorizado =
+    await verificarAdministrador();
 
-      if (!autorizado) return;
+  if (!autorizado) return;
 
-      await cargarPreguntas();
+  const areasCargadas =
+    await cargarAreas();
 
-    }
+  if (!areasCargadas) return;
+
+  await cargarPreguntas();
+
+}
 
 
     iniciar();
