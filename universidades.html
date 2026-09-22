@@ -5,187 +5,648 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Universidades - CAAES</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial,Helvetica,sans-serif;
       background:#f4f7fb;
       color:#1f2937;
     }
-    .contenedor{max-width:1100px;margin:0 auto;padding:24px}
+
+    .contenedor{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px;
+    }
+
     .encabezado{
-      background:#fff;border-radius:18px;padding:24px;margin-bottom:20px;
+      background:#fff;
+      border-radius:18px;
+      padding:24px;
+      margin-bottom:20px;
       box-shadow:0 4px 18px rgba(0,0,0,.07);
     }
-    .encabezado h1{margin:0 0 8px;font-size:28px;color:#123b70}
-    .encabezado p{margin:0;color:#64748b}
-    .acciones-superiores{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+    .encabezado h1{
+      margin:0 0 8px;
+      font-size:28px;
+      color:#123b70;
+    }
+
+    .encabezado p{
+      margin:0;
+      color:#64748b;
+    }
+
+    .acciones-superiores{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+
     button{
-      border:0;border-radius:10px;padding:12px 16px;font-size:15px;
-      font-weight:700;cursor:pointer;
+      border:0;
+      border-radius:10px;
+      padding:12px 16px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
     }
-    .btn-principal{background:#123b70;color:#fff}
-    .btn-secundario{background:#e8eef7;color:#123b70}
-    .btn-editar{background:#e8eef7;color:#123b70}
-    .btn-estado{background:#fff3cd;color:#7a5700}
-    .btn-reactivar{background:#dcfce7;color:#166534}
-    .btn-cancelar{background:#e5e7eb;color:#374151}
-    button:hover{filter:brightness(.97)}
+
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    .btn-principal{
+      background:#123b70;
+      color:#fff;
+    }
+
+    .btn-secundario{
+      background:#e8eef7;
+      color:#123b70;
+    }
+
+    .btn-editar{
+      background:#e8eef7;
+      color:#123b70;
+    }
+
+    .btn-areas{
+      background:#ede9fe;
+      color:#5b21b6;
+    }
+
+    .btn-estado{
+      background:#fff3cd;
+      color:#7a5700;
+    }
+
+    .btn-reactivar{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .btn-cancelar{
+      background:#e5e7eb;
+      color:#374151;
+    }
+
+    button:hover{
+      filter:brightness(.97);
+    }
+
     .panel{
-      background:#fff;border-radius:18px;padding:22px;margin-bottom:20px;
+      background:#fff;
+      border-radius:18px;
+      padding:22px;
+      margin-bottom:20px;
       box-shadow:0 4px 18px rgba(0,0,0,.07);
     }
-    .panel h2{margin:0 0 18px;color:#123b70}
-    .formulario{display:grid;grid-template-columns:1fr auto;gap:12px}
-    input{
-      width:100%;padding:13px 14px;border:1px solid #cbd5e1;
-      border-radius:10px;font-size:16px;outline:none;
+
+    .panel h2{
+      margin:0 0 18px;
+      color:#123b70;
     }
-    input:focus{border-color:#123b70;box-shadow:0 0 0 3px rgba(18,59,112,.1)}
-    .buscador{margin-bottom:16px}
+
+    .formulario{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+    }
+
+    input{
+      width:100%;
+      padding:13px 14px;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      font-size:16px;
+      outline:none;
+    }
+
+    input:focus{
+      border-color:#123b70;
+      box-shadow:0 0 0 3px rgba(18,59,112,.1);
+    }
+
+    .buscador{
+      margin-bottom:16px;
+    }
+
     .mensaje{
-      padding:12px 14px;border-radius:10px;margin-top:14px;display:none;
+      padding:12px 14px;
+      border-radius:10px;
+      margin-top:14px;
+      display:none;
       font-weight:600;
     }
-    .mensaje.exito{display:block;background:#dcfce7;color:#166534}
-    .mensaje.error{display:block;background:#fee2e2;color:#991b1b}
-    .mensaje.info{display:block;background:#e0f2fe;color:#075985}
-    .tabla-wrap{overflow-x:auto}
-    table{width:100%;border-collapse:collapse;min-width:700px}
-    th,td{padding:14px 12px;border-bottom:1px solid #e5e7eb;text-align:left}
-    th{background:#f8fafc;color:#475569;font-size:14px}
-    td{vertical-align:middle}
+
+    .mensaje.exito{
+      display:block;
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .mensaje.error{
+      display:block;
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .mensaje.info{
+      display:block;
+      background:#e0f2fe;
+      color:#075985;
+    }
+
+    .tabla-wrap{
+      overflow-x:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:850px;
+    }
+
+    th,td{
+      padding:14px 12px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+    }
+
+    th{
+      background:#f8fafc;
+      color:#475569;
+      font-size:14px;
+    }
+
+    td{
+      vertical-align:middle;
+    }
+
     .estado{
-      display:inline-block;padding:6px 10px;border-radius:999px;
-      font-size:13px;font-weight:700;
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
     }
-    .activo{background:#dcfce7;color:#166534}
-    .inactivo{background:#fee2e2;color:#991b1b}
-    .acciones{display:flex;gap:7px;flex-wrap:wrap}
-    .vacio{text-align:center;color:#64748b;padding:28px}
-    .cargando{text-align:center;color:#64748b;padding:28px}
+
+    .activo{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .inactivo{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .acciones{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .vacio{
+      text-align:center;
+      color:#64748b;
+      padding:28px;
+    }
+
+    .cargando{
+      text-align:center;
+      color:#64748b;
+      padding:28px;
+    }
+
     .modal{
-      display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);
-      align-items:center;justify-content:center;padding:20px;z-index:1000;
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.55);
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:1000;
     }
-    .modal.abierto{display:flex}
+
+    .modal.abierto{
+      display:flex;
+    }
+
     .modal-contenido{
-      background:#fff;border-radius:18px;padding:24px;width:min(500px,100%);
+      background:#fff;
+      border-radius:18px;
+      padding:24px;
+      width:min(500px,100%);
+      max-height:90vh;
+      overflow-y:auto;
       box-shadow:0 15px 40px rgba(0,0,0,.2);
     }
-    .modal-contenido h2{margin-top:0;color:#123b70}
-    .modal-acciones{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-    .contador{font-size:14px;color:#64748b;margin-bottom:12px}
+
+    .modal-contenido h2{
+      margin-top:0;
+      color:#123b70;
+    }
+
+    .modal-acciones{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    .contador{
+      font-size:14px;
+      color:#64748b;
+      margin-bottom:12px;
+    }
+
+    .lista-areas{
+      display:grid;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    .area-item{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:13px 14px;
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      background:#f8fafc;
+      cursor:pointer;
+    }
+
+    .area-item:hover{
+      background:#f1f5f9;
+    }
+
+    .area-item input{
+      width:20px;
+      height:20px;
+      margin:0;
+      cursor:pointer;
+    }
+
+    .area-item span{
+      font-weight:700;
+      color:#334155;
+    }
+
+    .ayuda-areas{
+      margin:0;
+      color:#64748b;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .contador-areas{
+      margin-top:12px;
+      font-size:14px;
+      color:#64748b;
+    }
+
     @media(max-width:650px){
-      .contenedor{padding:14px}
-      .encabezado h1{font-size:23px}
-      .formulario{grid-template-columns:1fr}
-      .formulario button{width:100%}
-      .acciones-superiores button{width:100%}
+
+      .contenedor{
+        padding:14px;
+      }
+
+      .encabezado h1{
+        font-size:23px;
+      }
+
+      .formulario{
+        grid-template-columns:1fr;
+      }
+
+      .formulario button{
+        width:100%;
+      }
+
+      .acciones-superiores button{
+        width:100%;
+      }
+
+      .acciones{
+        flex-direction:column;
+      }
+
+      .acciones button{
+        width:100%;
+      }
     }
   </style>
 </head>
+
 <body>
+
   <div class="contenedor">
+
     <section class="encabezado">
+
       <h1>🏫 Administración de Universidades</h1>
-      <p>Gestiona las universidades disponibles para los simuladores CAAES.</p>
+
+      <p>
+        Gestiona las universidades disponibles para los simuladores CAAES.
+      </p>
+
       <div class="acciones-superiores">
-        <button class="btn-secundario" id="btnVolver">← Volver al panel</button>
-        <button class="btn-principal" id="btnNueva">➕ Nueva universidad</button>
+
+        <button class="btn-secundario" id="btnVolver">
+          ← Volver al panel
+        </button>
+
+        <button class="btn-principal" id="btnNueva">
+          ➕ Nueva universidad
+        </button>
+
       </div>
+
     </section>
 
+
     <section class="panel">
+
       <h2>🔎 Buscar universidades</h2>
-      <input class="buscador" id="busqueda" type="search" placeholder="Escribe el nombre de una universidad...">
+
+      <input
+        class="buscador"
+        id="busqueda"
+        type="search"
+        placeholder="Escribe el nombre de una universidad..."
+      >
+
       <div class="contador" id="contador"></div>
+
       <div class="tabla-wrap">
+
         <table>
+
           <thead>
+
             <tr>
               <th>Universidad</th>
               <th>Estado</th>
               <th>Registrada</th>
               <th>Acciones</th>
             </tr>
+
           </thead>
+
           <tbody id="tablaUniversidades">
-            <tr><td colspan="4" class="cargando">Cargando universidades...</td></tr>
+
+            <tr>
+              <td colspan="4" class="cargando">
+                Cargando universidades...
+              </td>
+            </tr>
+
           </tbody>
+
         </table>
+
       </div>
+
       <div id="mensaje" class="mensaje"></div>
+
     </section>
+
   </div>
+
+
+  <!-- MODAL UNIVERSIDAD -->
 
   <div class="modal" id="modal">
+
     <div class="modal-contenido">
-      <h2 id="tituloModal">➕ Nueva universidad</h2>
-      <label for="nombreUniversidad"><strong>Nombre de la universidad</strong></label>
-      <input id="nombreUniversidad" type="text" maxlength="150" placeholder="Ej.: Escuela Politécnica del Ejército (ESPE)">
+
+      <h2 id="tituloModal">
+        ➕ Nueva universidad
+      </h2>
+
+      <label for="nombreUniversidad">
+        <strong>Nombre de la universidad</strong>
+      </label>
+
+      <input
+        id="nombreUniversidad"
+        type="text"
+        maxlength="150"
+        placeholder="Ej.: Escuela Politécnica del Ejército (ESPE)"
+      >
+
       <div id="mensajeModal" class="mensaje"></div>
+
       <div class="modal-acciones">
-        <button class="btn-cancelar" id="btnCancelar">Cancelar</button>
-        <button class="btn-principal" id="btnGuardar">Guardar</button>
+
+        <button class="btn-cancelar" id="btnCancelar">
+          Cancelar
+        </button>
+
+        <button class="btn-principal" id="btnGuardar">
+          Guardar
+        </button>
+
       </div>
+
     </div>
+
   </div>
 
+
+  <!-- MODAL ÁREAS -->
+
+  <div class="modal" id="modalAreas">
+
+    <div class="modal-contenido">
+
+      <h2 id="tituloModalAreas">
+        📚 Áreas de evaluación
+      </h2>
+
+      <p class="ayuda-areas">
+        Selecciona las áreas que forman parte del proceso de evaluación
+        de esta universidad.
+      </p>
+
+      <div id="listaAreas" class="lista-areas">
+        <div class="cargando">
+          Cargando áreas...
+        </div>
+      </div>
+
+      <div id="contadorAreas" class="contador-areas"></div>
+
+      <div id="mensajeAreas" class="mensaje"></div>
+
+      <div class="modal-acciones">
+
+        <button class="btn-cancelar" id="btnCancelarAreas">
+          Cancelar
+        </button>
+
+        <button class="btn-principal" id="btnGuardarAreas">
+          Guardar áreas
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
 <script>
-const SUPABASE_URL = "https://uetdixjvbxqldanjwbpg.supabase.co";
-const SUPABASE_KEY = "sb_publishable_UdFDD9V9erD05CAVy3_mFQ_oRVY8_r-";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const SUPABASE_URL =
+  "https://uetdixjvbxqldanjwbpg.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_UdFDD9V9erD05CAVy3_mFQ_oRVY8_r-";
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
 
 let universidades = [];
 let universidadEditando = null;
+let universidadAreasEditando = null;
+let areasDisponibles = [];
 
-const tabla = document.getElementById("tablaUniversidades");
-const busqueda = document.getElementById("busqueda");
-const contador = document.getElementById("contador");
-const mensaje = document.getElementById("mensaje");
-const modal = document.getElementById("modal");
-const nombreInput = document.getElementById("nombreUniversidad");
-const tituloModal = document.getElementById("tituloModal");
-const mensajeModal = document.getElementById("mensajeModal");
+
+const tabla =
+  document.getElementById("tablaUniversidades");
+
+const busqueda =
+  document.getElementById("busqueda");
+
+const contador =
+  document.getElementById("contador");
+
+const mensaje =
+  document.getElementById("mensaje");
+
+const modal =
+  document.getElementById("modal");
+
+const nombreInput =
+  document.getElementById("nombreUniversidad");
+
+const tituloModal =
+  document.getElementById("tituloModal");
+
+const mensajeModal =
+  document.getElementById("mensajeModal");
+
+
+const modalAreas =
+  document.getElementById("modalAreas");
+
+const tituloModalAreas =
+  document.getElementById("tituloModalAreas");
+
+const listaAreas =
+  document.getElementById("listaAreas");
+
+const contadorAreas =
+  document.getElementById("contadorAreas");
+
+const mensajeAreas =
+  document.getElementById("mensajeAreas");
+
 
 function mostrarMensaje(texto, tipo="info") {
+
   mensaje.textContent = texto;
-  mensaje.className = "mensaje " + tipo;
+
+  mensaje.className =
+    "mensaje " + tipo;
+
   setTimeout(() => {
+
     mensaje.className = "mensaje";
+
     mensaje.textContent = "";
+
   }, 4500);
 }
 
-function mostrarMensajeModal(texto, tipo="error") {
+
+function mostrarMensajeModal(
+  texto,
+  tipo="error"
+) {
+
   mensajeModal.textContent = texto;
-  mensajeModal.className = "mensaje " + tipo;
+
+  mensajeModal.className =
+    "mensaje " + tipo;
 }
+
 
 function limpiarMensajeModal() {
+
   mensajeModal.textContent = "";
-  mensajeModal.className = "mensaje";
+
+  mensajeModal.className =
+    "mensaje";
 }
 
-function abrirModal(nueva=true, universidad=null) {
-  universidadEditando = nueva ? null : universidad;
-  tituloModal.textContent = nueva ? "➕ Nueva universidad" : "✏️ Editar universidad";
-  nombreInput.value = nueva ? "" : universidad.name;
+
+function abrirModal(
+  nueva=true,
+  universidad=null
+) {
+
+  universidadEditando =
+    nueva ? null : universidad;
+
+  tituloModal.textContent =
+    nueva
+      ? "➕ Nueva universidad"
+      : "✏️ Editar universidad";
+
+  nombreInput.value =
+    nueva ? "" : universidad.name;
+
   limpiarMensajeModal();
+
   modal.classList.add("abierto");
-  setTimeout(() => nombreInput.focus(), 100);
+
+  setTimeout(() =>
+    nombreInput.focus(),
+    100
+  );
 }
+
 
 function cerrarModal() {
+
   modal.classList.remove("abierto");
+
   universidadEditando = null;
+
   nombreInput.value = "";
+
   limpiarMensajeModal();
 }
 
+
 function escaparHTML(texto) {
+
   return String(texto)
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
@@ -194,188 +655,897 @@ function escaparHTML(texto) {
     .replaceAll("'","&#039;");
 }
 
-function formatearFecha(fecha) {
-  if (!fecha) return "—";
-  return new Date(fecha).toLocaleDateString("es-EC", {
-    day:"2-digit", month:"2-digit", year:"numeric"
-  });
+
+function escaparAtributo(texto) {
+
+  return escaparHTML(texto);
 }
 
-function renderizarUniversidades() {
-  const termino = busqueda.value.trim().toLowerCase();
 
-  const filtradas = universidades.filter(u =>
-    u.name.toLowerCase().includes(termino)
+function formatearFecha(fecha) {
+
+  if (!fecha) return "—";
+
+  return new Date(fecha).toLocaleDateString(
+    "es-EC",
+    {
+      day:"2-digit",
+      month:"2-digit",
+      year:"numeric"
+    }
   );
+}
 
-  contador.textContent = `${filtradas.length} universidad${filtradas.length !== 1 ? "es" : ""} mostrada${filtradas.length !== 1 ? "s" : ""}`;
+
+function renderizarUniversidades() {
+
+  const termino =
+    busqueda.value
+      .trim()
+      .toLowerCase();
+
+  const filtradas =
+    universidades.filter(u =>
+      u.name
+        .toLowerCase()
+        .includes(termino)
+    );
+
+
+  contador.textContent =
+    `${filtradas.length} universidad${
+      filtradas.length !== 1
+        ? "es"
+        : ""
+    } mostrada${
+      filtradas.length !== 1
+        ? "s"
+        : ""
+    }`;
+
 
   if (!filtradas.length) {
-    tabla.innerHTML = `<tr><td colspan="4" class="vacio">No se encontraron universidades.</td></tr>`;
+
+    tabla.innerHTML = `
+      <tr>
+        <td colspan="4" class="vacio">
+          No se encontraron universidades.
+        </td>
+      </tr>
+    `;
+
     return;
   }
 
-  tabla.innerHTML = filtradas.map(u => `
-    <tr>
-      <td><strong>${escaparHTML(u.name)}</strong></td>
-      <td>
-        <span class="estado ${u.active ? "activo" : "inactivo"}">
-          ${u.active ? "🟢 Activa" : "🔴 Inactiva"}
-        </span>
-      </td>
-      <td>${formatearFecha(u.created_at)}</td>
-      <td>
-        <div class="acciones">
-          <button class="btn-editar" onclick="editarUniversidad('${u.id}')">✏️ Editar</button>
-          ${
+
+  tabla.innerHTML =
+    filtradas.map(u => `
+
+      <tr>
+
+        <td>
+          <strong>
+            ${escaparHTML(u.name)}
+          </strong>
+        </td>
+
+        <td>
+
+          <span class="estado ${
             u.active
-            ? `<button class="btn-estado" onclick="cambiarEstado('${u.id}', false)">⏸️ Desactivar</button>`
-            : `<button class="btn-reactivar" onclick="cambiarEstado('${u.id}', true)">▶️ Reactivar</button>`
-          }
-        </div>
-      </td>
-    </tr>
-  `).join("");
+              ? "activo"
+              : "inactivo"
+          }">
+
+            ${
+              u.active
+                ? "🟢 Activa"
+                : "🔴 Inactiva"
+            }
+
+          </span>
+
+        </td>
+
+        <td>
+          ${formatearFecha(u.created_at)}
+        </td>
+
+        <td>
+
+          <div class="acciones">
+
+            <button
+              class="btn-areas"
+              onclick="gestionarAreas('${u.id}')"
+            >
+              📚 Áreas
+            </button>
+
+            <button
+              class="btn-editar"
+              onclick="editarUniversidad('${u.id}')"
+            >
+              ✏️ Editar
+            </button>
+
+            ${
+              u.active
+
+              ? `
+
+                <button
+                  class="btn-estado"
+                  onclick="cambiarEstado('${u.id}', false)"
+                >
+                  ⏸️ Desactivar
+                </button>
+
+              `
+
+              : `
+
+                <button
+                  class="btn-reactivar"
+                  onclick="cambiarEstado('${u.id}', true)"
+                >
+                  ▶️ Reactivar
+                </button>
+
+              `
+            }
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `).join("");
 }
 
+
 async function verificarAdmin() {
-  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+
+  const {
+    data: { session },
+    error: sessionError
+  } =
+    await supabaseClient.auth.getSession();
+
 
   if (sessionError || !session) {
-    window.location.href = "login.html";
+
+    window.location.href =
+      "login.html";
+
     return false;
   }
 
-  const { data, error } = await supabaseClient
-    .from("admin_users")
-    .select("user_id")
-    .eq("user_id", session.user.id)
-    .maybeSingle();
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+
+      .from("admin_users")
+
+      .select("user_id")
+
+      .eq(
+        "user_id",
+        session.user.id
+      )
+
+      .maybeSingle();
+
 
   if (error || !data) {
-    alert("Acceso denegado. Esta cuenta no tiene permisos de administrador.");
+
+    alert(
+      "Acceso denegado. Esta cuenta no tiene permisos de administrador."
+    );
+
     await supabaseClient.auth.signOut();
-    window.location.href = "login.html";
+
+    window.location.href =
+      "login.html";
+
     return false;
   }
+
 
   return true;
 }
 
-async function cargarUniversidades() {
-  tabla.innerHTML = `<tr><td colspan="4" class="cargando">Cargando universidades...</td></tr>`;
 
-  const { data, error } = await supabaseClient
-    .from("universities")
-    .select("id, name, active, created_at")
-    .order("name", { ascending: true });
+async function cargarUniversidades() {
+
+  tabla.innerHTML = `
+    <tr>
+      <td colspan="4" class="cargando">
+        Cargando universidades...
+      </td>
+    </tr>
+  `;
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+
+      .from("universities")
+
+      .select(
+        "id, name, active, created_at"
+      )
+
+      .order(
+        "name",
+        { ascending:true }
+      );
+
 
   if (error) {
+
     console.error(error);
-    tabla.innerHTML = `<tr><td colspan="4" class="vacio">No se pudieron cargar las universidades.</td></tr>`;
-    mostrarMensaje("Error al cargar universidades: " + error.message, "error");
+
+    tabla.innerHTML = `
+      <tr>
+        <td colspan="4" class="vacio">
+          No se pudieron cargar las universidades.
+        </td>
+      </tr>
+    `;
+
+    mostrarMensaje(
+      "Error al cargar universidades: " +
+      error.message,
+      "error"
+    );
+
     return;
   }
 
-  universidades = data || [];
+
+  universidades =
+    data || [];
+
   renderizarUniversidades();
 }
 
+
 function editarUniversidad(id) {
-  const universidad = universidades.find(u => u.id === id);
-  if (universidad) abrirModal(false, universidad);
+
+  const universidad =
+    universidades.find(
+      u => u.id === id
+    );
+
+  if (universidad) {
+
+    abrirModal(
+      false,
+      universidad
+    );
+  }
 }
 
+
 async function guardarUniversidad() {
-  const nombre = nombreInput.value.trim();
+
+  const nombre =
+    nombreInput.value.trim();
+
 
   if (!nombre) {
-    mostrarMensajeModal("Escribe el nombre de la universidad.");
+
+    mostrarMensajeModal(
+      "Escribe el nombre de la universidad."
+    );
+
     nombreInput.focus();
+
     return;
   }
+
 
   if (nombre.length < 2) {
-    mostrarMensajeModal("El nombre es demasiado corto.");
+
+    mostrarMensajeModal(
+      "El nombre es demasiado corto."
+    );
+
     return;
   }
 
-  const nombreNormalizado = nombre.toLowerCase();
 
-  const duplicada = universidades.find(u =>
-    u.name.trim().toLowerCase() === nombreNormalizado &&
-    (!universidadEditando || u.id !== universidadEditando.id)
-  );
+  const nombreNormalizado =
+    nombre.toLowerCase();
+
+
+  const duplicada =
+    universidades.find(u =>
+      u.name
+        .trim()
+        .toLowerCase() ===
+        nombreNormalizado
+      &&
+      (
+        !universidadEditando
+        ||
+        u.id !==
+        universidadEditando.id
+      )
+    );
+
 
   if (duplicada) {
-    mostrarMensajeModal("Ya existe una universidad con ese nombre.");
+
+    mostrarMensajeModal(
+      "Ya existe una universidad con ese nombre."
+    );
+
     return;
   }
 
-  const boton = document.getElementById("btnGuardar");
+
+  const boton =
+    document.getElementById(
+      "btnGuardar"
+    );
+
+
   boton.disabled = true;
-  boton.textContent = "Guardando...";
+
+  boton.textContent =
+    "Guardando...";
+
+
+  const estabaEditando =
+    !!universidadEditando;
 
   let error;
 
+
   if (universidadEditando) {
-    ({ error } = await supabaseClient
-      .from("universities")
-      .update({ name: nombre })
-      .eq("id", universidadEditando.id));
+
+    ({
+      error
+    } =
+      await supabaseClient
+
+        .from("universities")
+
+        .update({
+          name:nombre
+        })
+
+        .eq(
+          "id",
+          universidadEditando.id
+        )
+    );
+
   } else {
-    const resultado = await supabaseClient
-      .from("universities")
-      .insert({
-        name: nombre,
-        active: true
-      });
-    error = resultado.error;
+
+    const resultado =
+      await supabaseClient
+
+        .from("universities")
+
+        .insert({
+          name:nombre,
+          active:true
+        });
+
+    error =
+      resultado.error;
   }
 
+
   boton.disabled = false;
-  boton.textContent = "Guardar";
+
+  boton.textContent =
+    "Guardar";
+
 
   if (error) {
+
     console.error(error);
-    if (error.code === "23505") {
-      mostrarMensajeModal("Ya existe una universidad con ese nombre.");
+
+    if (
+      error.code ===
+      "23505"
+    ) {
+
+      mostrarMensajeModal(
+        "Ya existe una universidad con ese nombre."
+      );
+
     } else {
-      mostrarMensajeModal("No se pudo guardar: " + error.message);
+
+      mostrarMensajeModal(
+        "No se pudo guardar: " +
+        error.message
+      );
     }
+
     return;
   }
 
+
   cerrarModal();
+
+
   mostrarMensaje(
-    universidadEditando ? "Universidad actualizada correctamente." : "Universidad creada correctamente.",
+    estabaEditando
+      ? "Universidad actualizada correctamente."
+      : "Universidad creada correctamente.",
     "exito"
   );
+
+
   await cargarUniversidades();
 }
 
-async function cambiarEstado(id, nuevoEstado) {
-  const universidad = universidades.find(u => u.id === id);
+
+/* ============================
+   GESTIÓN DE ÁREAS
+============================ */
+
+
+async function cargarAreasDisponibles() {
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+
+      .from("areas")
+
+      .select(
+        "id, name, active"
+      )
+
+      .eq(
+        "active",
+        true
+      )
+
+      .order(
+        "name",
+        { ascending:true }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    mostrarMensajeAreas(
+      "No se pudieron cargar las áreas: " +
+      error.message,
+      "error"
+    );
+
+    return false;
+  }
+
+
+  areasDisponibles =
+    data || [];
+
+  return true;
+}
+
+
+async function gestionarAreas(id) {
+
+  const universidad =
+    universidades.find(
+      u => u.id === id
+    );
+
+
   if (!universidad) return;
 
-  const accion = nuevoEstado ? "reactivar" : "desactivar";
 
-  const confirmar = confirm(
-    `¿Estás seguro de que quieres ${accion} la universidad "${universidad.name}"?`
+  universidadAreasEditando =
+    universidad;
+
+
+  tituloModalAreas.textContent =
+    `📚 Áreas de ${universidad.name}`;
+
+
+  listaAreas.innerHTML = `
+    <div class="cargando">
+      Cargando áreas...
+    </div>
+  `;
+
+
+  contadorAreas.textContent = "";
+
+  mensajeAreas.textContent = "";
+
+  mensajeAreas.className =
+    "mensaje";
+
+
+  modalAreas.classList.add(
+    "abierto"
   );
+
+
+  const areasOk =
+    await cargarAreasDisponibles();
+
+
+  if (!areasOk) return;
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+
+      .from("university_areas")
+
+      .select(
+        "area_id, active"
+      )
+
+      .eq(
+        "university_id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    listaAreas.innerHTML = "";
+
+    mostrarMensajeAreas(
+      "No se pudieron cargar las áreas asignadas: " +
+      error.message,
+      "error"
+    );
+
+    return;
+  }
+
+
+  const areasAsignadas =
+    new Set(
+      (data || [])
+        .filter(
+          fila => fila.active
+        )
+        .map(
+          fila => fila.area_id
+        )
+    );
+
+
+  if (!areasDisponibles.length) {
+
+    listaAreas.innerHTML = `
+      <div class="vacio">
+        No existen áreas activas configuradas.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  listaAreas.innerHTML =
+    areasDisponibles
+      .map(area => `
+
+        <label class="area-item">
+
+          <input
+            type="checkbox"
+            class="check-area"
+            value="${escaparAtributo(area.id)}"
+            ${areasAsignadas.has(area.id)
+              ? "checked"
+              : ""}
+          >
+
+          <span>
+            ${escaparHTML(area.name)}
+          </span>
+
+        </label>
+
+      `)
+      .join("");
+
+
+  actualizarContadorAreas();
+}
+
+
+function actualizarContadorAreas() {
+
+  const seleccionadas =
+    document.querySelectorAll(
+      ".check-area:checked"
+    );
+
+
+  contadorAreas.textContent =
+    `${seleccionadas.length} área${
+      seleccionadas.length !== 1
+        ? "s"
+        : ""
+    } seleccionada${
+      seleccionadas.length !== 1
+        ? "s"
+        : ""
+    }`;
+}
+
+
+function mostrarMensajeAreas(
+  texto,
+  tipo="error"
+) {
+
+  mensajeAreas.textContent =
+    texto;
+
+  mensajeAreas.className =
+    "mensaje " + tipo;
+}
+
+
+function cerrarModalAreas() {
+
+  modalAreas.classList.remove(
+    "abierto"
+  );
+
+  universidadAreasEditando =
+    null;
+
+  listaAreas.innerHTML = "";
+
+  contadorAreas.textContent = "";
+
+  mensajeAreas.textContent = "";
+
+  mensajeAreas.className =
+    "mensaje";
+}
+
+
+async function guardarAreas() {
+
+  if (!universidadAreasEditando) {
+
+    mostrarMensajeAreas(
+      "No se encontró la universidad.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const boton =
+    document.getElementById(
+      "btnGuardarAreas"
+    );
+
+
+  const seleccionadas =
+    Array.from(
+      document.querySelectorAll(
+        ".check-area:checked"
+      )
+    )
+    .map(
+      checkbox =>
+        checkbox.value
+    );
+
+
+  boton.disabled = true;
+
+  boton.textContent =
+    "Guardando...";
+
+
+  /*
+    Primero eliminamos las relaciones
+    actuales de esta universidad.
+  */
+
+  const {
+    error: errorEliminar
+  } =
+    await supabaseClient
+
+      .from("university_areas")
+
+      .delete()
+
+      .eq(
+        "university_id",
+        universidadAreasEditando.id
+      );
+
+
+  if (errorEliminar) {
+
+    console.error(
+      errorEliminar
+    );
+
+    boton.disabled = false;
+
+    boton.textContent =
+      "Guardar áreas";
+
+    mostrarMensajeAreas(
+      "No se pudieron actualizar las áreas: " +
+      errorEliminar.message,
+      "error"
+    );
+
+    return;
+  }
+
+
+  /*
+    Si no seleccionó ninguna,
+    dejamos la universidad sin áreas.
+  */
+
+  if (seleccionadas.length > 0) {
+
+    const filas =
+      seleccionadas.map(
+        areaId => ({
+          university_id:
+            universidadAreasEditando.id,
+
+          area_id:
+            areaId,
+
+          active:true
+        })
+      );
+
+
+    const {
+      error: errorInsertar
+    } =
+      await supabaseClient
+
+        .from("university_areas")
+
+        .insert(filas);
+
+
+    if (errorInsertar) {
+
+      console.error(
+        errorInsertar
+      );
+
+      boton.disabled = false;
+
+      boton.textContent =
+        "Guardar áreas";
+
+      mostrarMensajeAreas(
+        "No se pudieron guardar las áreas: " +
+        errorInsertar.message,
+        "error"
+      );
+
+      return;
+    }
+  }
+
+
+  boton.disabled = false;
+
+  boton.textContent =
+    "Guardar áreas";
+
+
+  const nombreUniversidad =
+    universidadAreasEditando.name;
+
+
+  cerrarModalAreas();
+
+
+  mostrarMensaje(
+    `Áreas de "${nombreUniversidad}" actualizadas correctamente.`,
+    "exito"
+  );
+}
+
+
+/* ============================
+   ESTADO UNIVERSIDAD
+============================ */
+
+
+async function cambiarEstado(
+  id,
+  nuevoEstado
+) {
+
+  const universidad =
+    universidades.find(
+      u => u.id === id
+    );
+
+
+  if (!universidad) return;
+
+
+  const accion =
+    nuevoEstado
+      ? "reactivar"
+      : "desactivar";
+
+
+  const confirmar =
+    confirm(
+      `¿Estás seguro de que quieres ${accion} la universidad "${universidad.name}"?`
+    );
+
 
   if (!confirmar) return;
 
-  const { error } = await supabaseClient
-    .from("universities")
-    .update({ active: nuevoEstado })
-    .eq("id", id);
+
+  const {
+    error
+  } =
+    await supabaseClient
+
+      .from("universities")
+
+      .update({
+        active:nuevoEstado
+      })
+
+      .eq(
+        "id",
+        id
+      );
+
 
   if (error) {
+
     console.error(error);
-    mostrarMensaje("No se pudo cambiar el estado: " + error.message, "error");
+
+    mostrarMensaje(
+      "No se pudo cambiar el estado: " +
+      error.message,
+      "error"
+    );
+
     return;
   }
+
 
   mostrarMensaje(
     nuevoEstado
@@ -384,31 +1554,152 @@ async function cambiarEstado(id, nuevoEstado) {
     "exito"
   );
 
+
   await cargarUniversidades();
 }
 
-document.getElementById("btnNueva").addEventListener("click", () => abrirModal(true));
-document.getElementById("btnCancelar").addEventListener("click", cerrarModal);
-document.getElementById("btnGuardar").addEventListener("click", guardarUniversidad);
-document.getElementById("btnVolver").addEventListener("click", () => {
-  window.location.href = "admin.html";
-});
-busqueda.addEventListener("input", renderizarUniversidades);
 
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) cerrarModal();
-});
+/* ============================
+   EVENTOS
+============================ */
 
-nombreInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") guardarUniversidad();
-  if (e.key === "Escape") cerrarModal();
-});
+
+document
+  .getElementById("btnNueva")
+  .addEventListener(
+    "click",
+    () => abrirModal(true)
+  );
+
+
+document
+  .getElementById("btnCancelar")
+  .addEventListener(
+    "click",
+    cerrarModal
+  );
+
+
+document
+  .getElementById("btnGuardar")
+  .addEventListener(
+    "click",
+    guardarUniversidad
+  );
+
+
+document
+  .getElementById("btnVolver")
+  .addEventListener(
+    "click",
+    () => {
+      window.location.href =
+        "admin.html";
+    }
+  );
+
+
+document
+  .getElementById("btnCancelarAreas")
+  .addEventListener(
+    "click",
+    cerrarModalAreas
+  );
+
+
+document
+  .getElementById("btnGuardarAreas")
+  .addEventListener(
+    "click",
+    guardarAreas
+  );
+
+
+busqueda.addEventListener(
+  "input",
+  renderizarUniversidades
+);
+
+
+modal.addEventListener(
+  "click",
+  e => {
+
+    if (
+      e.target === modal
+    ) {
+      cerrarModal();
+    }
+
+  }
+);
+
+
+modalAreas.addEventListener(
+  "click",
+  e => {
+
+    if (
+      e.target === modalAreas
+    ) {
+      cerrarModalAreas();
+    }
+
+  }
+);
+
+
+nombreInput.addEventListener(
+  "keydown",
+  e => {
+
+    if (e.key === "Enter") {
+      guardarUniversidad();
+    }
+
+    if (e.key === "Escape") {
+      cerrarModal();
+    }
+
+  }
+);
+
+
+listaAreas.addEventListener(
+  "change",
+  e => {
+
+    if (
+      e.target.classList.contains(
+        "check-area"
+      )
+    ) {
+      actualizarContadorAreas();
+    }
+
+  }
+);
+
+
+/* ============================
+   INICIO
+============================ */
+
 
 (async function iniciar() {
-  const autorizado = await verificarAdmin();
+
+  const autorizado =
+    await verificarAdmin();
+
+
   if (!autorizado) return;
+
+
   await cargarUniversidades();
+
 })();
+
 </script>
+
 </body>
 </html>
