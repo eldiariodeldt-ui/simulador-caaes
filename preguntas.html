@@ -60,6 +60,18 @@
       margin-bottom: 10px;
     }
 
+    .area {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  margin-left: 6px;
+}
+
     .texto-pregunta {
       font-size: 18px;
       font-weight: bold;
@@ -154,6 +166,7 @@
       );
 
     let preguntas = [];
+let areas = [];
 
     async function verificarAdministrador() {
 
@@ -211,6 +224,37 @@
     }
 
 
+    async function cargarAreas() {
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("areas")
+    .select("id, name, active")
+    .eq("active", true)
+    .order("name", {
+      ascending: true
+    });
+
+  if (error) {
+
+    console.error("Error cargando áreas:", error);
+
+    alert(
+      "No se pudieron cargar las áreas.\n\n" +
+      error.message
+    );
+
+    return false;
+  }
+
+  areas = data || [];
+
+  return true;
+}
+    
+    
     async function cargarPreguntas() {
 
       const {
@@ -274,8 +318,25 @@
           <div class="pregunta">
 
             <div class="materia">
-              ${pregunta.subject}
-            </div>
+  ${pregunta.subject}
+</div>
+
+${
+  pregunta.area_id
+    ? `
+      <div class="area">
+        🧠 ${
+          areas.find(a => a.id === pregunta.area_id)?.name
+          || "Área"
+        }
+      </div>
+    `
+    : `
+      <div class="area" style="background:#f3f4f6;color:#6b7280;">
+        Sin área
+      </div>
+    `
+}
 
             <div class="texto-pregunta">
               ${indice + 1}. ${pregunta.question_text}
