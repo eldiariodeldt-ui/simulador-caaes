@@ -1894,15 +1894,14 @@ async function guardarSimulador() {
 
 
   if (
-    materias.length === 0
-  ) {
-
-    alert(
-      "⚠️ Selecciona al menos una materia."
-    );
-
-    return;
-  }
+  materias.length === 0 &&
+  areasSeleccionadas.length === 0
+) {
+  alert(
+    "⚠️ Selecciona al menos una materia o un área de evaluación."
+  );
+  return;
+}
 
 
   if (
@@ -2069,16 +2068,15 @@ async function guardarSimulador() {
   }
 
 
+  if (materias.length > 0) {
+
   const registrosMaterias =
     materias.map(
       subject => ({
-        test_id:
-          testId,
-
+        test_id: testId,
         subject
       })
     );
-
 
   const {
     error:
@@ -2089,6 +2087,34 @@ async function guardarSimulador() {
       .insert(
         registrosMaterias
       );
+
+  if (errorMaterias) {
+
+    console.error(
+      errorMaterias
+    );
+
+    if (!id) {
+
+      await supabaseClient
+        .from("tests")
+        .delete()
+        .eq(
+          "id",
+          testId
+        );
+
+    }
+
+    alert(
+      "❌ No se pudieron guardar las materias.\n\n" +
+      errorMaterias.message
+    );
+
+    return;
+  }
+
+}
 
 
   if (errorMaterias) {
