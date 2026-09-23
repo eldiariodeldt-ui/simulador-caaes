@@ -2073,14 +2073,16 @@ async function guardarSimulador() {
   const registrosMaterias =
     materias.map(
       subject => ({
-        test_id: testId,
+        test_id:
+          testId,
+
         subject
       })
     );
 
+
   const {
-    error:
-      errorMaterias
+    error: errorMaterias
   } =
     await supabaseClient
       .from("test_subjects")
@@ -2088,11 +2090,13 @@ async function guardarSimulador() {
         registrosMaterias
       );
 
+
   if (errorMaterias) {
 
     console.error(
       errorMaterias
     );
+
 
     if (!id) {
 
@@ -2105,6 +2109,7 @@ async function guardarSimulador() {
         );
 
     }
+
 
     alert(
       "❌ No se pudieron guardar las materias.\n\n" +
