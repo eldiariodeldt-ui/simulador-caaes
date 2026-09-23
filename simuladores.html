@@ -1904,18 +1904,6 @@ async function guardarSimulador() {
 }
 
 
-  if (
-  areasSeleccionadas.length === 0
-) {
-
-  alert(
-    "⚠️ Selecciona al menos un área de evaluación."
-  );
-
-  return;
-}
-
-
   let universidadId =
     universidadSeleccionada;
 
@@ -2120,35 +2108,6 @@ async function guardarSimulador() {
   }
 
 }
-
-
-  if (errorMaterias) {
-
-    console.error(
-      errorMaterias
-    );
-
-
-    if (!id) {
-
-      await supabaseClient
-        .from("tests")
-        .delete()
-        .eq(
-          "id",
-          testId
-        );
-
-    }
-
-
-    alert(
-      "❌ No se pudieron guardar las materias.\n\n" +
-      errorMaterias.message
-    );
-
-    return;
-  }
 
 
   const {
