@@ -199,6 +199,54 @@
       background: #f8fafc;
     }
 
+    .area {
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.area label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-weight: normal;
+  margin: 0;
+}
+
+.area input {
+  width: auto;
+}
+
+.areas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.areas-lista {
+  margin: 15px 0;
+}
+
+.etiqueta-area {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  margin: 3px;
+}
+
+@media (max-width: 700px) {
+  .areas {
+    grid-template-columns: 1fr;
+  }
+}
+
     .materia label {
       display: flex;
       align-items: center;
@@ -517,6 +565,30 @@
 
     <div class="grupo">
 
+  <label>
+    Áreas de evaluación
+  </label>
+
+  <div
+    id="areas"
+    class="areas"
+  >
+
+    <div class="nota">
+      Primero selecciona una universidad.
+    </div>
+
+  </div>
+
+  <div class="nota">
+    Las áreas disponibles dependen de la universidad seleccionada.
+  </div>
+
+</div>
+
+
+    <div class="grupo">
+
       <label>
         Materias incluidas
       </label>
@@ -636,6 +708,7 @@ const supabaseClient =
 
 let universidades = [];
 let simuladores = [];
+let areas = [];
 
 
 function llenarCantidadPreguntas() {
@@ -723,7 +796,41 @@ async function verificarAdministrador() {
   return true;
 }
 
+  
+async function cargarAreas() {
 
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("areas")
+    .select("id, name, active")
+    .eq("active", true)
+    .order("name", {
+      ascending: true
+    });
+
+  if (error) {
+
+    console.error(
+      "Error cargando áreas:",
+      error
+    );
+
+    alert(
+      "❌ No se pudieron cargar las áreas.\n\n" +
+      error.message
+    );
+
+    return false;
+  }
+
+  areas = data || [];
+
+  return true;
+}
+
+  
 async function cargarUniversidades() {
 
   const {
@@ -784,6 +891,106 @@ async function cargarUniversidades() {
   );
 
 }
+
+
+async function cargarAreasDeUniversidad(universityId) {
+
+  const contenedor =
+    document.getElementById("areas");
+
+  if (!universityId) {
+
+    contenedor.innerHTML = `
+      <div class="nota">
+        Primero selecciona una universidad.
+      </div>
+    `;
+
+    return [];
+  }
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("university_areas")
+    .select(`
+      area_id,
+      areas (
+        id,
+        name
+      )
+    `)
+    .eq(
+      "university_id",
+      universityId
+    )
+    .eq(
+      "active",
+      true
+    );
+
+  if (error) {
+
+    console.error(
+      "Error cargando áreas de universidad:",
+      error
+    );
+
+    contenedor.innerHTML = `
+      <div class="nota">
+        ❌ No se pudieron cargar las áreas.
+      </div>
+    `;
+
+    return [];
+  }
+
+  if (!data || data.length === 0) {
+
+    contenedor.innerHTML = `
+      <div class="nota">
+        ⚠️ Esta universidad todavía no tiene áreas configuradas.
+      </div>
+    `;
+
+    return [];
+  }
+
+  contenedor.innerHTML =
+    data
+      .map(
+        registro => {
+
+          const area =
+            registro.areas;
+
+          if (!area) return "";
+
+          return `
+            <div class="area">
+
+              <label>
+
+                <input
+                  type="checkbox"
+                  name="area"
+                  value="${area.id}"
+                >
+
+                ${escapeHtml(area.name)}
+
+              </label>
+
+            </div>
+          `;
+
+        }
+      )
+      .join("");
+
+  return data;
+}  
 
 
 async function cargarSimuladores() {
@@ -894,6 +1101,36 @@ async function cargarSimuladores() {
       materias || [];
 
 
+    const {
+  data: areasSimulador,
+  error: errorAreas
+} =
+  await supabaseClient
+    .from("test_areas")
+    .select(`
+      area_id,
+      areas (
+        id,
+        name
+      )
+    `)
+    .eq(
+      "test_id",
+      simulador.id
+    );
+
+if (errorAreas) {
+
+  console.error(
+    errorAreas
+  );
+
+}
+
+simulador.areas =
+  areasSimulador || [];
+
+
     const clase =
       simulador.active
         ? ""
@@ -940,6 +1177,37 @@ async function cargarSimuladores() {
             Sin materias configuradas
           </span>
         `;
+
+
+    const etiquetasAreas =
+  simulador.areas.length > 0
+
+    ? simulador.areas
+        .map(
+          registro => {
+
+            const nombre =
+              registro.areas
+                ? registro.areas.name
+                : "Área";
+
+            return `
+              <span
+                class="etiqueta-area"
+              >
+                ${escapeHtml(nombre)}
+              </span>
+            `;
+
+          }
+        )
+        .join("")
+
+    : `
+      <span style="color:#94a3b8;">
+        Sin áreas configuradas
+      </span>
+    `;
 
 
     const acciones =
@@ -1063,6 +1331,21 @@ async function cargarSimuladores() {
         </div>
 
 
+        <div class="areas-lista">
+
+  <strong>
+    🧠 Áreas de evaluación:
+  </strong>
+
+  <div
+    style="margin-top:8px;"
+  >
+    ${etiquetasAreas}
+  </div>
+
+</div>
+
+
         <div class="acciones">
 
           ${acciones}
@@ -1078,6 +1361,20 @@ async function cargarSimuladores() {
   lista.innerHTML =
     html;
 }
+
+
+document
+  .getElementById("universidad")
+  .addEventListener(
+    "change",
+    async function () {
+
+      await cargarAreasDeUniversidad(
+        this.value
+      );
+
+    }
+  );  
 
 
 function mostrarFormularioNuevo() {
@@ -1107,6 +1404,15 @@ function mostrarFormularioNuevo() {
   document.getElementById(
     "universidad"
   ).value = "";
+
+
+  document.getElementById(
+  "areas"
+).innerHTML = `
+  <div class="nota">
+    Primero selecciona una universidad.
+  </div>
+`;
 
 
   document.getElementById(
@@ -1369,6 +1675,55 @@ async function editarSimulador(id) {
   ).value =
     simulador.university_id || "";
 
+  
+  await cargarAreasDeUniversidad(
+  simulador.university_id
+);
+
+
+  const {
+  data: areasSeleccionadas,
+  error: errorAreas
+} = await supabaseClient
+  .from("test_areas")
+  .select("area_id")
+  .eq(
+    "test_id",
+    simulador.id
+  );
+
+if (errorAreas) {
+
+  console.error(
+    "Error cargando áreas del simulador:",
+    errorAreas
+  );
+
+} else {
+
+  const idsAreas =
+    (areasSeleccionadas || [])
+      .map(
+        registro =>
+          registro.area_id
+      );
+
+  document
+    .querySelectorAll(
+      'input[name="area"]'
+    )
+    .forEach(
+      input => {
+
+        input.checked =
+          idsAreas.includes(
+            input.value
+          );
+
+      }
+    );
+}
+
 
   document.getElementById(
     "cantidad_preguntas"
@@ -1433,6 +1788,20 @@ function obtenerMateriasSeleccionadas() {
 }
 
 
+function obtenerAreasSeleccionadas() {
+
+  return Array.from(
+    document.querySelectorAll(
+      'input[name="area"]:checked'
+    )
+  ).map(
+    input =>
+      input.value
+  );
+
+}
+
+
 async function guardarSimulador() {
 
   const id =
@@ -1479,6 +1848,10 @@ async function guardarSimulador() {
 
   const materias =
     obtenerMateriasSeleccionadas();
+
+
+  const areasSeleccionadas =
+  obtenerAreasSeleccionadas();
 
 
   if (!nombre) {
@@ -1530,6 +1903,18 @@ async function guardarSimulador() {
 
     return;
   }
+
+
+  if (
+  areasSeleccionadas.length === 0
+) {
+
+  alert(
+    "⚠️ Selecciona al menos un área de evaluación."
+  );
+
+  return;
+}
 
 
   let universidadId =
@@ -1735,6 +2120,70 @@ async function guardarSimulador() {
   }
 
 
+  const {
+  error:
+    errorEliminarAreas
+} =
+  await supabaseClient
+    .from("test_areas")
+    .delete()
+    .eq(
+      "test_id",
+      testId
+    );
+
+if (errorEliminarAreas) {
+
+  console.error(
+    errorEliminarAreas
+  );
+
+  alert(
+    "❌ No se pudieron actualizar las áreas.\n\n" +
+    errorEliminarAreas.message
+  );
+
+  return;
+}
+
+
+const registrosAreas =
+  areasSeleccionadas.map(
+    areaId => ({
+      test_id:
+        testId,
+
+      area_id:
+        areaId
+    })
+  );
+
+
+const {
+  error:
+    errorAreas
+} =
+  await supabaseClient
+    .from("test_areas")
+    .insert(
+      registrosAreas
+    );
+
+
+if (errorAreas) {
+
+  console.error(
+    errorAreas
+  );
+
+  alert(
+    "❌ No se pudieron guardar las áreas.\n\n" +
+    errorAreas.message
+  );
+
+  return;
+}
+  
   alert(
     id
       ? "✅ Simulador actualizado correctamente."
@@ -1923,9 +2372,16 @@ async function iniciar() {
   }
 
 
-  await cargarUniversidades();
+  const areasCargadas =
+  await cargarAreas();
 
-  await cargarSimuladores();
+if (!areasCargadas) {
+  return;
+}
+
+await cargarUniversidades();
+
+await cargarSimuladores();
 }
 
 
