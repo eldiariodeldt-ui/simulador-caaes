@@ -206,6 +206,49 @@
   background: #f8fafc;
 }
 
+.area-contenido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.area-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-weight: normal;
+  margin: 0;
+}
+
+.area-check input {
+  width: auto;
+}
+
+.area-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.area-cantidad input {
+  width: 90px;
+  padding: 8px;
+  text-align: center;
+}
+
+.total-areas {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-weight: bold;
+  text-align: center;
+}
+
 .area label {
   display: flex;
   align-items: center;
@@ -653,8 +696,8 @@
       </div>
 
       <div class="nota">
-        Selecciona al menos una materia.
-      </div>
+  Las materias son opcionales cuando el simulador utiliza áreas de evaluación.
+</div>
 
     </div>
 
@@ -970,24 +1013,108 @@ async function cargarAreasDeUniversidad(universityId) {
           return `
             <div class="area">
 
-              <label>
+              <div class="area-contenido">
 
-                <input
-                  type="checkbox"
-                  name="area"
-                  value="${area.id}"
+                <label class="area-check">
+
+                  <input
+                    type="checkbox"
+                    name="area"
+                    value="${area.id}"
+                  >
+
+                  ${escapeHtml(area.name)}
+
+                </label>
+
+                <div
+                  class="area-cantidad"
                 >
 
-                ${escapeHtml(area.name)}
+                  <input
+                    type="number"
+                    class="cantidad-area"
+                    data-area-id="${area.id}"
+                    min="1"
+                    step="1"
+                    value=""
+                    placeholder="0"
+                    disabled
+                  >
 
-              </label>
+                  <span>
+                    preguntas
+                  </span>
+
+                </div>
+
+              </div>
 
             </div>
           `;
 
         }
       )
-      .join("");
+      .join("") +
+
+      `
+        <div
+          id="totalAreas"
+          class="total-areas"
+        >
+          Total configurado: 0
+        </div>
+      `;
+
+  document
+    .querySelectorAll(
+      'input[name="area"]'
+    )
+    .forEach(
+      checkbox => {
+
+        checkbox.addEventListener(
+          "change",
+          function() {
+
+            const cantidad =
+              document.querySelector(
+                `.cantidad-area[data-area-id="${this.value}"]`
+              );
+
+            if (cantidad) {
+
+              cantidad.disabled =
+                !this.checked;
+
+              if (!this.checked) {
+                cantidad.value = "";
+              }
+
+            }
+
+            actualizarTotalAreas();
+
+          }
+        );
+
+      }
+    );
+
+  document
+    .querySelectorAll(
+      ".cantidad-area"
+    )
+    .forEach(
+      input => {
+
+        input.addEventListener(
+          "input",
+          actualizarTotalAreas
+        );
+
+      }
+    );
 
   return data;
 }  
@@ -1686,7 +1813,7 @@ async function editarSimulador(id) {
   error: errorAreas
 } = await supabaseClient
   .from("test_areas")
-  .select("area_id")
+  .select("area_id, question_count")
   .eq(
     "test_id",
     simulador.id
@@ -1701,29 +1828,47 @@ if (errorAreas) {
 
 } else {
 
-  const idsAreas =
-    (areasSeleccionadas || [])
-      .map(
-        registro =>
-          registro.area_id
-      );
+  const configuracionesAreas =
+  areasSeleccionadas || [];
 
-  document
-    .querySelectorAll(
-      'input[name="area"]'
-    )
-    .forEach(
-      input => {
+document
+  .querySelectorAll(
+    'input[name="area"]'
+  )
+  .forEach(
+    input => {
 
-        input.checked =
-          idsAreas.includes(
+      const configuracion =
+        configuracionesAreas.find(
+          registro =>
+            registro.area_id ===
             input.value
-          );
+        );
+
+      input.checked =
+        !!configuracion;
+
+      const cantidad =
+        document.querySelector(
+          `.cantidad-area[data-area-id="${input.value}"]`
+        );
+
+      if (cantidad) {
+
+        cantidad.disabled =
+          !configuracion;
+
+        cantidad.value =
+          configuracion
+            ? configuracion.question_count
+            : "";
 
       }
-    );
-}
 
+    }
+  );
+
+actualizarTotalAreas();
 
   document.getElementById(
     "cantidad_preguntas"
@@ -1802,6 +1947,67 @@ function obtenerAreasSeleccionadas() {
 }
 
 
+function obtenerConfiguracionAreas() {
+
+  return Array.from(
+    document.querySelectorAll(
+      'input[name="area"]:checked'
+    )
+  ).map(
+    checkbox => {
+
+      const cantidad =
+        document.querySelector(
+          `.cantidad-area[data-area-id="${checkbox.value}"]`
+        );
+
+      return {
+        area_id: checkbox.value,
+        question_count:
+          Number(
+            cantidad?.value || 0
+          )
+      };
+
+    }
+  );
+
+}
+
+
+function actualizarTotalAreas() {
+
+  const configuraciones =
+    obtenerConfiguracionAreas();
+
+  const total =
+    configuraciones.reduce(
+      (suma, area) =>
+        suma + (
+          Number.isFinite(
+            area.question_count
+          )
+            ? area.question_count
+            : 0
+        ),
+      0
+    );
+
+  const elemento =
+    document.getElementById(
+      "totalAreas"
+    );
+
+  if (elemento) {
+
+    elemento.textContent =
+      `Total configurado: ${total}`;
+
+  }
+
+}  
+
+
 async function guardarSimulador() {
 
   const id =
@@ -1850,8 +2056,13 @@ async function guardarSimulador() {
     obtenerMateriasSeleccionadas();
 
 
-  const areasSeleccionadas =
-  obtenerAreasSeleccionadas();
+  const areasConfiguradas =
+  obtenerConfiguracionAreas();
+
+const areasSeleccionadas =
+  areasConfiguradas.map(
+    area => area.area_id
+  );
 
 
   if (!nombre) {
@@ -1901,6 +2112,49 @@ async function guardarSimulador() {
     "⚠️ Selecciona al menos una materia o un área de evaluación."
   );
   return;
+}
+
+
+  if (areasConfiguradas.length > 0) {
+
+  const cantidadInvalida =
+    areasConfiguradas.some(
+      area =>
+        !Number.isInteger(
+          area.question_count
+        ) ||
+        area.question_count <= 0
+    );
+
+  if (cantidadInvalida) {
+
+    alert(
+      "⚠️ Cada área seleccionada debe tener una cantidad válida de preguntas."
+    );
+
+    return;
+  }
+
+  const totalAreas =
+    areasConfiguradas.reduce(
+      (suma, area) =>
+        suma + area.question_count,
+      0
+    );
+
+  if (
+    totalAreas !==
+    cantidadPreguntas
+  ) {
+
+    alert(
+      `⚠️ La suma de preguntas por área debe ser exactamente ${cantidadPreguntas}.\n\n` +
+      `Actualmente tienes configuradas ${totalAreas} preguntas.`
+    );
+
+    return;
+  }
+
 }
 
 
@@ -2138,13 +2392,18 @@ if (errorEliminarAreas) {
 
 
 const registrosAreas =
-  areasSeleccionadas.map(
-    areaId => ({
+  areasConfiguradas.map(
+    area => ({
+
       test_id:
         testId,
 
       area_id:
-        areaId
+        area.area_id,
+
+      question_count:
+        area.question_count
+
     })
   );
 
