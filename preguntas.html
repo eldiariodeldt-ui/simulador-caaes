@@ -6,6 +6,26 @@
 
   <title>Preguntas | CAAES</title>
 
+  <script>
+    // Configuración de MathJax para mostrar fórmulas escritas con \( ... \) o $...$.
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"], ["$$", "$$"]]
+      },
+      options: {
+        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      },
+      startup: {
+        typeset: false,
+        ready: () => {
+          MathJax.startup.defaultReady();
+          document.dispatchEvent(new Event("mathjax-ready"));
+        }
+      }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -168,6 +188,25 @@
 
     let preguntas = [];
 let areas = [];
+
+// Renderiza las expresiones matemáticas dentro del contenido visible, no en los campos de edición.
+function procesarMatematicas(elemento) {
+  if (!elemento) return;
+  const renderizar = () => {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetClear([elemento]);
+      window.MathJax.typesetPromise([elemento]).catch(error => {
+        console.error("Error al mostrar fórmulas matemáticas:", error);
+      });
+    }
+  };
+
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    renderizar();
+  } else {
+    document.addEventListener("mathjax-ready", renderizar, { once: true });
+  }
+}
 
     async function verificarAdministrador() {
 
@@ -460,6 +499,8 @@ ${
         `;
 
       }).join("");
+
+      procesarMatematicas(contenido);
     }
 
 
@@ -527,6 +568,10 @@ ${
       </select>
 
       <label>Pregunta</label>
+      <p style="color:#4b5563;font-size:13px;margin:5px 0 8px;">
+        Para fórmulas, escribe el código entre \\( y \\). Ejemplo: \\(x^2+3x-4=0\\).
+        Para una fracción: \\(\\frac{a}{b}\\). Las fórmulas se mostrarán al visualizar la pregunta.
+      </p>
 
       <textarea
         id="editar_pregunta"
@@ -584,6 +629,9 @@ ${
   "
 >
 
+      <p style="color:#4b5563;font-size:13px;margin:0 0 8px;">
+        También puedes escribir fórmulas en las opciones, por ejemplo: \\(\\sqrt{25}\\) o \\(\\frac{1}{2}\\).
+      </p>
       <label>Opción A</label>
       <input
         id="editar_a"
@@ -922,6 +970,10 @@ ${
       <label>
         Pregunta
       </label>
+      <p style="color:#4b5563;font-size:13px;margin:5px 0 8px;">
+        Para fórmulas, escribe el código entre \\( y \\). Ejemplo: \\(x^2+3x-4=0\\).
+        Para una fracción: \\(\\frac{a}{b}\\). Las fórmulas se mostrarán al visualizar la pregunta.
+      </p>
 
       <textarea
         id="nueva_pregunta"
@@ -956,6 +1008,10 @@ ${
   "
 >      
 
+
+      <p style="color:#4b5563;font-size:13px;margin:0 0 8px;">
+        También puedes escribir fórmulas en las opciones, por ejemplo: \\(\\sqrt{25}\\) o \\(\\frac{1}{2}\\).
+      </p>
 
       <label>
         Opción A
