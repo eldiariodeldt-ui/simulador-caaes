@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador CAAES</title>
 
+  <!-- MathJax: permite mostrar fórmulas escritas con LaTeX -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      startup: {
+        typeset: false
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -478,6 +496,10 @@ function mostrarPregunta() {
   const respuestaSeleccionada =
     respuestas[pregunta.id];
 
+  // Limpia el renderizado anterior antes de cambiar de pregunta.
+  if (window.MathJax && window.MathJax.typesetClear) {
+    window.MathJax.typesetClear([app]);
+  }
 
   app.innerHTML = `
 
@@ -611,6 +633,13 @@ function mostrarPregunta() {
     </div>
 
   `;
+
+  // Renderiza las fórmulas de la pregunta y de las opciones A, B, C y D.
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise([app]).catch(error => {
+      console.error("Error al mostrar fórmulas matemáticas:", error);
+    });
+  }
 }
 
 
