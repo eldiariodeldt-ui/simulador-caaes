@@ -592,28 +592,32 @@ function mostrarPregunta() {
 
 
       ${crearOpcion(
-        1,
-        pregunta.option_a,
-        respuestaSeleccionada
-      )}
+  1,
+  pregunta.option_a,
+  respuestaSeleccionada,
+  pregunta.option_a_image_url
+)}
 
-      ${crearOpcion(
-        2,
-        pregunta.option_b,
-        respuestaSeleccionada
-      )}
+${crearOpcion(
+  2,
+  pregunta.option_b,
+  respuestaSeleccionada,
+  pregunta.option_b_image_url
+)}
 
-      ${crearOpcion(
-        3,
-        pregunta.option_c,
-        respuestaSeleccionada
-      )}
+${crearOpcion(
+  3,
+  pregunta.option_c,
+  respuestaSeleccionada,
+  pregunta.option_c_image_url
+)}
 
-      ${crearOpcion(
-        4,
-        pregunta.option_d,
-        respuestaSeleccionada
-      )}
+${crearOpcion(
+  4,
+  pregunta.option_d,
+  respuestaSeleccionada,
+  pregunta.option_d_image_url
+)}
 
 
       <div class="navegacion">
@@ -724,15 +728,36 @@ if (tiempoRestante <= 0) {
    CREAR OPCIÓN
 ========================================= */
 
-function crearOpcion(numero, texto, seleccionada) {
+function crearOpcion(numero, texto, seleccionada, imagenUrl) {
+
+  const imagen = imagenUrl
+    ? `
+      <img
+        src="${imagenUrl}"
+        alt="Imagen de la alternativa ${String.fromCharCode(64 + numero)}"
+        style="
+          display:block;
+          max-width:100%;
+          max-height:220px;
+          margin:12px 0;
+          border-radius:8px;
+          object-fit:contain;
+        "
+      >
+    `
+    : "";
 
   return `
     <button
       class="opcion ${seleccionada === numero ? "seleccionada" : ""}"
       onclick="seleccionarRespuesta(${numero})">
 
-      ${String.fromCharCode(64 + numero)}.
-      ${texto}
+      <div>
+        <strong>${String.fromCharCode(64 + numero)}.</strong>
+        ${texto || ""}
+      </div>
+
+      ${imagen}
 
     </button>
   `;
