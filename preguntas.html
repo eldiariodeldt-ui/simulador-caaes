@@ -208,6 +208,38 @@ function procesarMatematicas(elemento) {
   }
 }
 
+// Sube una imagen al bucket existente y devuelve su URL pública.
+async function subirImagenOpcion(archivo) {
+  if (!archivo) return null;
+
+  const extension = archivo.name.split(".").pop().toLowerCase();
+  const nombreArchivo = `${crypto.randomUUID()}.${extension}`;
+
+  const { error } = await supabaseClient
+    .storage
+    .from("question-images")
+    .upload(nombreArchivo, archivo);
+
+  if (error) throw error;
+
+  const { data } = supabaseClient
+    .storage
+    .from("question-images")
+    .getPublicUrl(nombreArchivo);
+
+  return data.publicUrl;
+}
+
+// Muestra la imagen guardada de una alternativa, si existe.
+function vistaPreviaImagenOpcion(url, letra) {
+  return url
+    ? `<div style="margin:8px 0 12px;">
+         <img src="${url}" alt="Imagen actual de la opción ${letra}"
+           style="max-width:100%;max-height:180px;display:block;object-fit:contain;border-radius:8px;">
+       </div>`
+    : `<p style="color:#6b7280;font-size:13px;margin:6px 0 10px;">Sin imagen para esta opción.</p>`;
+}
+
     async function verificarAdministrador() {
 
       const {
@@ -408,7 +440,8 @@ ${
                 ? "correcta"
                 : ""
             }">
-              A. ${pregunta.option_a}
+              A. ${pregunta.option_a || ""}
+              ${pregunta.option_a_image_url ? `<div style="margin:8px 0;"><img src="${pregunta.option_a_image_url}" alt="Imagen opción A" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:8px;"></div>` : ""}
             </div>
 
             <div class="opcion ${
@@ -416,7 +449,8 @@ ${
                 ? "correcta"
                 : ""
             }">
-              B. ${pregunta.option_b}
+              B. ${pregunta.option_b || ""}
+              ${pregunta.option_b_image_url ? `<div style="margin:8px 0;"><img src="${pregunta.option_b_image_url}" alt="Imagen opción B" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:8px;"></div>` : ""}
             </div>
 
             <div class="opcion ${
@@ -424,7 +458,8 @@ ${
                 ? "correcta"
                 : ""
             }">
-              C. ${pregunta.option_c}
+              C. ${pregunta.option_c || ""}
+              ${pregunta.option_c_image_url ? `<div style="margin:8px 0;"><img src="${pregunta.option_c_image_url}" alt="Imagen opción C" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:8px;"></div>` : ""}
             </div>
 
             <div class="opcion ${
@@ -432,7 +467,8 @@ ${
                 ? "correcta"
                 : ""
             }">
-              D. ${pregunta.option_d}
+              D. ${pregunta.option_d || ""}
+              ${pregunta.option_d_image_url ? `<div style="margin:8px 0;"><img src="${pregunta.option_d_image_url}" alt="Imagen opción D" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:8px;"></div>` : ""}
             </div>
 
             <div class="estado">
@@ -632,32 +668,64 @@ ${
       <p style="color:#4b5563;font-size:13px;margin:0 0 8px;">
         También puedes escribir fórmulas en las opciones, por ejemplo: \\(\\sqrt{25}\\) o \\(\\frac{1}{2}\\).
       </p>
-      <label>Opción A</label>
+      <label>Opción A (texto, si corresponde)</label>
       <input
         id="editar_a"
-        value="${pregunta.option_a}"
-        style="width:100%;padding:10px;margin:8px 0 15px;"
+        value="${pregunta.option_a || ""}"
+        style="width:100%;padding:10px;margin:8px 0 8px;"
+      >
+      ${vistaPreviaImagenOpcion(pregunta.option_a_image_url, "A")}
+      <label>Imagen de la opción A</label>
+      <input
+        id="editar_imagen_a"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
-      <label>Opción B</label>
+      <label>Opción B (texto, si corresponde)</label>
       <input
         id="editar_b"
-        value="${pregunta.option_b}"
-        style="width:100%;padding:10px;margin:8px 0 15px;"
+        value="${pregunta.option_b || ""}"
+        style="width:100%;padding:10px;margin:8px 0 8px;"
+      >
+      ${vistaPreviaImagenOpcion(pregunta.option_b_image_url, "B")}
+      <label>Imagen de la opción B</label>
+      <input
+        id="editar_imagen_b"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
-      <label>Opción C</label>
+      <label>Opción C (texto, si corresponde)</label>
       <input
         id="editar_c"
-        value="${pregunta.option_c}"
-        style="width:100%;padding:10px;margin:8px 0 15px;"
+        value="${pregunta.option_c || ""}"
+        style="width:100%;padding:10px;margin:8px 0 8px;"
+      >
+      ${vistaPreviaImagenOpcion(pregunta.option_c_image_url, "C")}
+      <label>Imagen de la opción C</label>
+      <input
+        id="editar_imagen_c"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
-      <label>Opción D</label>
+      <label>Opción D (texto, si corresponde)</label>
       <input
         id="editar_d"
-        value="${pregunta.option_d}"
-        style="width:100%;padding:10px;margin:8px 0 15px;"
+        value="${pregunta.option_d || ""}"
+        style="width:100%;padding:10px;margin:8px 0 8px;"
+      >
+      ${vistaPreviaImagenOpcion(pregunta.option_d_image_url, "D")}
+      <label>Imagen de la opción D</label>
+      <input
+        id="editar_imagen_d"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
       <label>Respuesta correcta</label>
@@ -743,14 +811,13 @@ ${
   const archivoImagen =
     document.getElementById("editar_imagen").files[0];
 
-  if (
-    !pregunta ||
-    !opcionA ||
-    !opcionB ||
-    !opcionC ||
-    !opcionD
-  ) {
-    alert("⚠️ Completa todos los campos.");
+  const tieneOpcionA = opcionA || preguntas.find(p => p.id === id)?.option_a_image_url || document.getElementById("editar_imagen_a").files[0];
+  const tieneOpcionB = opcionB || preguntas.find(p => p.id === id)?.option_b_image_url || document.getElementById("editar_imagen_b").files[0];
+  const tieneOpcionC = opcionC || preguntas.find(p => p.id === id)?.option_c_image_url || document.getElementById("editar_imagen_c").files[0];
+  const tieneOpcionD = opcionD || preguntas.find(p => p.id === id)?.option_d_image_url || document.getElementById("editar_imagen_d").files[0];
+
+  if (!pregunta || !tieneOpcionA || !tieneOpcionB || !tieneOpcionC || !tieneOpcionD) {
+    alert("⚠️ Escribe el texto o selecciona una imagen para cada alternativa A, B, C y D.");
     return;
   }
 
@@ -808,6 +875,20 @@ ${
       urlData.publicUrl;
   }
 
+
+  // Subir imágenes nuevas para las alternativas seleccionadas.
+  try {
+    for (const letra of ["a", "b", "c", "d"]) {
+      const archivo = document.getElementById(`editar_imagen_${letra}`).files[0];
+      if (archivo) {
+        datosActualizar[`option_${letra}_image_url`] = await subirImagenOpcion(archivo);
+      }
+    }
+  } catch (errorSubida) {
+    console.error(errorSubida);
+    alert("❌ No se pudo subir una imagen de alternativa: " + errorSubida.message);
+    return;
+  }
 
   /*
     ACTUALIZAR PREGUNTA
@@ -1013,75 +1094,75 @@ ${
         También puedes escribir fórmulas en las opciones, por ejemplo: \\(\\sqrt{25}\\) o \\(\\frac{1}{2}\\).
       </p>
 
-      <label>
-        Opción A
-      </label>
+      <label>Opción A (texto, si corresponde)</label>
 
       <input
         id="nueva_a"
         type="text"
-        placeholder="Opción A"
-        style="
-          width:100%;
-          padding:12px;
-          margin:8px 0 15px;
-          border-radius:8px;
-          border:1px solid #d1d5db;
-        "
+        placeholder="Texto de la opción A (opcional si subes una imagen)"
+        style="width:100%;padding:12px;margin:8px 0 8px;border-radius:8px;border:1px solid #d1d5db;"
+      >
+
+      <label>Imagen de la opción A (opcional)</label>
+      <input
+        id="nueva_imagen_a"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
 
-      <label>
-        Opción B
-      </label>
+      <label>Opción B (texto, si corresponde)</label>
 
       <input
         id="nueva_b"
         type="text"
-        placeholder="Opción B"
-        style="
-          width:100%;
-          padding:12px;
-          margin:8px 0 15px;
-          border-radius:8px;
-          border:1px solid #d1d5db;
-        "
+        placeholder="Texto de la opción B (opcional si subes una imagen)"
+        style="width:100%;padding:12px;margin:8px 0 8px;border-radius:8px;border:1px solid #d1d5db;"
+      >
+
+      <label>Imagen de la opción B (opcional)</label>
+      <input
+        id="nueva_imagen_b"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
 
-      <label>
-        Opción C
-      </label>
+      <label>Opción C (texto, si corresponde)</label>
 
       <input
         id="nueva_c"
         type="text"
-        placeholder="Opción C"
-        style="
-          width:100%;
-          padding:12px;
-          margin:8px 0 15px;
-          border-radius:8px;
-          border:1px solid #d1d5db;
-        "
+        placeholder="Texto de la opción C (opcional si subes una imagen)"
+        style="width:100%;padding:12px;margin:8px 0 8px;border-radius:8px;border:1px solid #d1d5db;"
+      >
+
+      <label>Imagen de la opción C (opcional)</label>
+      <input
+        id="nueva_imagen_c"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
 
-      <label>
-        Opción D
-      </label>
+      <label>Opción D (texto, si corresponde)</label>
 
       <input
         id="nueva_d"
         type="text"
-        placeholder="Opción D"
-        style="
-          width:100%;
-          padding:12px;
-          margin:8px 0 15px;
-          border-radius:8px;
-          border:1px solid #d1d5db;
-        "
+        placeholder="Texto de la opción D (opcional si subes una imagen)"
+        style="width:100%;padding:12px;margin:8px 0 8px;border-radius:8px;border:1px solid #d1d5db;"
+      >
+
+      <label>Imagen de la opción D (opcional)</label>
+      <input
+        id="nueva_imagen_d"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="width:100%;padding:10px;margin:8px 0 15px;border:1px solid #d1d5db;border-radius:8px;background:white;"
       >
 
 
@@ -1187,19 +1268,22 @@ ${
     document.getElementById("mensaje_guardado");
 
 
+  const archivosOpciones = {
+    a: document.getElementById("nueva_imagen_a").files[0],
+    b: document.getElementById("nueva_imagen_b").files[0],
+    c: document.getElementById("nueva_imagen_c").files[0],
+    d: document.getElementById("nueva_imagen_d").files[0]
+  };
+
   if (
     !pregunta ||
-    !opcionA ||
-    !opcionB ||
-    !opcionC ||
-    !opcionD
+    !(opcionA || archivosOpciones.a) ||
+    !(opcionB || archivosOpciones.b) ||
+    !(opcionC || archivosOpciones.c) ||
+    !(opcionD || archivosOpciones.d)
   ) {
-
-    mensaje.textContent =
-      "⚠️ Completa todos los campos.";
-
+    mensaje.textContent = "⚠️ Escribe el texto o selecciona una imagen para cada alternativa A, B, C y D.";
     mensaje.style.color = "#b91c1c";
-
     return;
   }
 
@@ -1261,6 +1345,26 @@ ${
   }
 
 
+  let imagenesOpciones = {
+    option_a_image_url: null,
+    option_b_image_url: null,
+    option_c_image_url: null,
+    option_d_image_url: null
+  };
+
+  try {
+    for (const letra of ["a", "b", "c", "d"]) {
+      if (archivosOpciones[letra]) {
+        imagenesOpciones[`option_${letra}_image_url`] = await subirImagenOpcion(archivosOpciones[letra]);
+      }
+    }
+  } catch (errorSubida) {
+    console.error(errorSubida);
+    mensaje.textContent = "❌ No se pudo subir una imagen de alternativa: " + errorSubida.message;
+    mensaje.style.color = "#b91c1c";
+    return;
+  }
+
   /*
     GUARDAR PREGUNTA
   */
@@ -1271,14 +1375,15 @@ ${
   } = await supabaseClient
     .from("questions")
     .insert({
-  subject: materia,
-  area_id: areaId,
-  question_text: pregunta,
+      subject: materia,
+      area_id: areaId,
+      question_text: pregunta,
       image_url: imageUrl,
       option_a: opcionA,
       option_b: opcionB,
       option_c: opcionC,
       option_d: opcionD,
+      ...imagenesOpciones,
       correct_option: correcta,
       active: true
     })
